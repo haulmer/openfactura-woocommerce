@@ -1,0 +1,50 @@
+body.no-scroll {
+    overflow: hidden;
+}
+
+.ofModal.tinymodal-window {
+    padding: 18px 0 8px;
+    border-radius: 4px;
+    box-shadow: 0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px -1px rgba(0,0,0,0.2);
+    background-color: #FAFAFA;
+    z-index: 1000;
+}
+
+.ofModal__body {
+    padding-left: 24px;
+    padding-right: 24px;
+}
+
+body.tinymodal-ready .tinymodal-cover {
+    z-index: 999;
+    background-color: rgba(0, 0, 0, 0.32);
+}
+
+.ofModal__header {
+    padding-left: 24px;
+    padding-right: 24px;
+    color: rgba(0,0,0,0.87);
+    font: 300 20px/28px circular-book, sans-serif;
+}
+
+.ofModal__actions {
+    padding-left: 16px;
+    padding-right: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.ofModal__actions .of-btn {
+    background-color: transparent;
+}
+
+.ofModal__actions .of-btn + .of-btn {
+    margin-left: 8px;
+}
+
+/* START special cases  */
+#manual-invoice {
+    width: 480px;
+}
+/* END special cases  */

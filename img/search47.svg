@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="47px" height="47px" viewBox="0 0 47 47" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 53.1 (72631) - https://sketchapp.com -->
+    <title>Untitled</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <path d="M33.3333333,29.3333333 L31.2266667,29.3333333 L30.48,28.6133333 C33.0933333,25.5733333 34.6666667,21.6266667 34.6666667,17.3333333 C34.6666667,7.76 26.9066667,0 17.3333333,0 C7.76,0 0,7.76 0,17.3333333 C0,26.9066667 7.76,34.6666667 17.3333333,34.6666667 C21.6266667,34.6666667 25.5733333,33.0933333 28.6133333,30.48 L29.3333333,31.2266667 L29.3333333,33.3333333 L42.6666667,46.64 L46.64,42.6666667 L33.3333333,29.3333333 Z M17.3333333,29.3333333 C10.6933333,29.3333333 5.33333333,23.9733333 5.33333333,17.3333333 C5.33333333,10.6933333 10.6933333,5.33333333 17.3333333,5.33333333 C23.9733333,5.33333333 29.3333333,10.6933333 29.3333333,17.3333333 C29.3333333,23.9733333 23.9733333,29.3333333 17.3333333,29.3333333 Z" id="path-1"></path>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="↳-Dark-Color">
+            <mask id="mask-2" fill="white">
+                <use xlink:href="#path-1"></use>
+            </mask>
+            <g id="Mask" fill-rule="nonzero"></g>
+            <g id="✱-/-Color-/-Icons-/-Black-/-Inactive" mask="url(#mask-2)" fill="#000000" fill-opacity="0.54">
+                <rect id="Rectangle" x="0" y="0" width="269" height="269"></rect>
+            </g>
+        </g>
+    </g>
+</svg>

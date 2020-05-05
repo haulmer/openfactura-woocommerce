@@ -1,0 +1,29 @@
+.linksBlock {
+    margin: 4px 0 18px;
+}
+
+.linksBlock [class*='link'] {
+    padding: 0;
+    display: inline-block;
+    vertical-align: middle;
+    color: #1d72e2;
+    border: none;
+    font: 300 14px/20px circular-book, sans-serif;
+    cursor: pointer;
+}
+
+.linksBlock [class*='link'] + [class*='link'] {
+    margin-left: 20px;
+}
+
+
+.status__refresh {
+    display: inline-block;
+    height: 32px;
+    width: 32px;
+    font-style: normal;
+    text-indent: -9999px;
+    border-bottom: none;
+    cursor: pointer;
+    background: url('../img/refresh.svg') center center no-repeat;
+}

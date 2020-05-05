@@ -1,0 +1,8 @@
+.snackbar-container.of-snackbar {
+    padding: 14px 16px;
+    border-radius: 2px;
+    font: 400 14px/20px circular-book, sans-serif;
+    color: #fff;
+    box-shadow: 0 6px 10px rgba(0,0,0,.14), 0 1px 18px rgba(0,0,0,.12), 0 3px 5px -1px rgba(0,0,0,.2);
+    background-color: rgba(0, 0, 0, .87) !important;
+}
