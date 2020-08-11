@@ -212,8 +212,13 @@ function save_data_openfactura_registry()
         foreach ($response['sucursales'] as $sucursal) {
             array_push($sucursales, $sucursal['direccion'] . "|" . $sucursal['cdgSIISucur']);
         }
-        $sucursales = json_encode($sucursales);
+
+        // Almacena sucursal-pricipal en lista de sucursales.
         $sucursal_active = $response['direccion'] . "|" . $response['cdgSIISucur'];
+        array_push($sucursales, $sucursal_active);
+
+        $sucursales = json_encode($sucursales);
+
         $num = $wpdb->get_var("SELECT COUNT(*) FROM  " . $wpdb->prefix . "openfactura_registry");
 
         if (is_array($num) || is_object($num)) {
