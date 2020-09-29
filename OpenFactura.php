@@ -1077,11 +1077,16 @@ function create_json_openfactura($order, $openfactura_registry)
             "Totales" => $totales
         ], "Detalle" => $detalle
     ];
+    $custom['custom'] = [
+        'origin' => 'WOOCOMMERCE'
+    ];
+
     $document_send = array_merge($document_send, $response);
     $document_send = array_merge($document_send, $customer);
     $document_send = array_merge($document_send, $customize_page);
     $document_send = array_merge($document_send, $self_service);
     $document_send = array_merge($document_send, $dte);
+    $document_send = array_merge($document_send, $custom);
     $document_send = json_encode($document_send, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     if (is_array($document_send) || is_object($document_send)) {
         error_log(print_r($document_send, true));
