@@ -4,9 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## V1.0.12 2020-09-29
+## V1.0.13 2020-09-29
 ### Added
 - origin in document.
+
+## V1.0.12 2020-08-11
+### fixed
+- If organization does not have Sucursales,the parent company is incorporated into the list in order to be selected.
 
 ## Unreleased
 ## V1.0.11 2020-04-24
