@@ -37,5 +37,5 @@ Todo el funcionamiento del plugin radica en el hook de WooCommerce `woocommerce_
 Instalación plugin
 -------------------------------
 
-La documentación está disponible en nuestro sitio de tutoriales [Haulmer  Docs](https://www.haulmer.com/docs/):
-  - [Guía de Instalación del plugin woocommerce](https://www.haulmer.com/docs/como-instalar-el-plugin-de-openfactura-en-woocommerce/)
+La documentación está disponible en nuestro sitio de tutoriales [Haulmer  Docs](https://help.haulmer.com/):
+  - [Guía de Instalación del plugin woocommerce](https://help.haulmer.com/hc/integraciones/como-instalar-el-plugin-de-openfactura-en-woocommerce-8f03230a-9bc5-4892-8e04-590c1618593a)
