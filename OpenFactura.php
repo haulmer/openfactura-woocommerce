@@ -912,6 +912,7 @@ function create_json_openfactura($order, $openfactura_registry)
     $mnt_total = 0;
     $detalle = array();
     $items = null;
+    $note = '';
 
     //Loop through order tax items searching is taxable
     foreach ($order->get_items() as $item) {
@@ -962,18 +963,18 @@ function create_json_openfactura($order, $openfactura_registry)
             $mnt_exe = $mnt_exe + $MontoItem;
             if ($openfactura_registry->is_description == '1' && !empty($description_product)) {
                 if ($item->get_subtotal() == $item->get_total()) {
-                    $items = ["NroLinDet" => $i, 'NmbItem' => substr($name_product, 0, 80), 'DscItem' => substr($description_product, 0, 1000), 'QtyItem' => $item->get_quantity(), 'PrcItem' => $PrcItem, 'MontoItem' => $MontoItem, 'IndExe' => 1];
+                    $items = ["NroLinDet" => $i, 'NmbItem' => substr($name_product, 0, 80), 'DscItem' => substr($description_product, 0, 1000), 'QtyItem' => $item->get_quantity(), 'PrcItem' => intval($PrcItem), 'MontoItem' => $MontoItem, 'IndExe' => 1];
                 } else {
                     $descuento = $item->get_subtotal() - $item->get_total();
-                    $items = ["NroLinDet" => $i, 'NmbItem' => substr($name_product, 0, 80), 'DscItem' => substr($description_product, 0, 1000), 'QtyItem' => $item->get_quantity(), 'PrcItem' => $PrcItem, 'MontoItem' => $MontoItem - round($descuento, 0), 'IndExe' => 1, 'DescuentoMonto' => round($descuento, 0)];
+                    $items = ["NroLinDet" => $i, 'NmbItem' => substr($name_product, 0, 80), 'DscItem' => substr($description_product, 0, 1000), 'QtyItem' => $item->get_quantity(), 'PrcItem' => intval($PrcItem), 'MontoItem' => $MontoItem - round($descuento, 0), 'IndExe' => 1, 'DescuentoMonto' => round($descuento, 0)];
                     $mnt_exe = $mnt_exe - round($descuento, 0);
                 }
             } else {
                 if ($item->get_subtotal() == $item->get_total()) {
-                    $items = ["NroLinDet" => $i, 'NmbItem' => substr($name_product, 0, 80), 'QtyItem' => $item->get_quantity(), 'PrcItem' => $PrcItem, 'MontoItem' => $MontoItem, 'IndExe' => 1];
+                    $items = ["NroLinDet" => $i, 'NmbItem' => substr($name_product, 0, 80), 'QtyItem' => $item->get_quantity(), 'PrcItem' => intval($PrcItem), 'MontoItem' => $MontoItem, 'IndExe' => 1];
                 } else {
                     $descuento = $item->get_subtotal() - $item->get_total();
-                    $items = ["NroLinDet" => $i, 'NmbItem' => substr($name_product, 0, 80), 'QtyItem' => $item->get_quantity(), 'PrcItem' => $PrcItem, 'MontoItem' => $MontoItem - round($descuento, 0), 'IndExe' => 1, 'DescuentoMonto' => round($descuento, 0)];
+                    $items = ["NroLinDet" => $i, 'NmbItem' => substr($name_product, 0, 80), 'QtyItem' => $item->get_quantity(), 'PrcItem' => intval($PrcItem), 'MontoItem' => $MontoItem - round($descuento, 0), 'IndExe' => 1, 'DescuentoMonto' => round($descuento, 0)];
                     $mnt_exe = $mnt_exe - round($descuento, 0);
                 }
             }
@@ -984,27 +985,35 @@ function create_json_openfactura($order, $openfactura_registry)
             $mnt_total = $mnt_total + $MontoItem;
             if ($openfactura_registry->is_description == '1' && !empty($description_product)) {
                 if ($item->get_subtotal() == $item->get_total()) {
-                    $items = ["NroLinDet" => $i, 'NmbItem' => substr($name_product, 0, 80), 'DscItem' => substr($description_product, 0, 1000), 'QtyItem' => $item->get_quantity(), 'PrcItem' => $PrcItem, 'MontoItem' => $MontoItem];
+                    $items = ["NroLinDet" => $i, 'NmbItem' => substr($name_product, 0, 80), 'DscItem' => substr($description_product, 0, 1000), 'QtyItem' => $item->get_quantity(), 'PrcItem' => intval($PrcItem), 'MontoItem' => $MontoItem];
                 } else {
                     $descuento = $item->get_subtotal() - $item->get_total();
-                    $items = ["NroLinDet" => $i, 'NmbItem' => substr($name_product, 0, 80), 'DscItem' => substr($description_product, 0, 1000), 'QtyItem' => $item->get_quantity(), 'PrcItem' => $PrcItem, 'MontoItem' => $MontoItem - round($descuento, 0), 'DescuentoMonto' => round($descuento, 0)];
+                    $items = ["NroLinDet" => $i, 'NmbItem' => substr($name_product, 0, 80), 'DscItem' => substr($description_product, 0, 1000), 'QtyItem' => $item->get_quantity(), 'PrcItem' => intval($PrcItem), 'MontoItem' => $MontoItem - round($descuento, 0), 'DescuentoMonto' => round($descuento, 0)];
                     $mnt_total = $mnt_total - round($descuento, 0);
                 }
             } else {
                 if ($item->get_subtotal() == $item->get_total()) {
-                    $items = ["NroLinDet" => $i, 'NmbItem' => substr($name_product, 0, 80), 'QtyItem' => $item->get_quantity(), 'PrcItem' => $PrcItem, 'MontoItem' => $MontoItem];
+                    $items = ["NroLinDet" => $i, 'NmbItem' => substr($name_product, 0, 80), 'QtyItem' => $item->get_quantity(), 'PrcItem' => intval($PrcItem), 'MontoItem' => $MontoItem];
                 } else {
                     $descuento = $item->get_subtotal() - $item->get_total();
-                    $items = ["NroLinDet" => $i, 'NmbItem' => substr($name_product, 0, 80), 'QtyItem' => $item->get_quantity(), 'PrcItem' => $PrcItem, 'MontoItem' => $MontoItem - round($descuento, 0), 'DescuentoMonto' => round($descuento, 0)];
+                    $items = ["NroLinDet" => $i, 'NmbItem' => substr($name_product, 0, 80), 'QtyItem' => $item->get_quantity(), 'PrcItem' => intval($PrcItem), 'MontoItem' => $MontoItem - round($descuento, 0), 'DescuentoMonto' => round($descuento, 0)];
                     $mnt_total = $mnt_total - round($descuento, 0);
                 }
             }
         }
-        $i++;
-        array_push($detalle, $items);
+        if (intval($MontoItem) == 0) {
+            if ($note == '') {
+                $note = 'Incluido sin costo en la compra:';
+            }
+            $note .= '<br/> *';
+            $note .= ' ' . 1 . ' ' . substr($name_product, 0, 80);
+        } else {
+            $i++;
+            array_push($detalle, $items);
+        }
     }
 
-    //Loop through order fee items 
+    //Loop through order fee items
     foreach ($order->get_items('fee') as $item_id => $item_fee) {
         $fee_total_tax = $item_fee->get_total_tax();
         $fee_name = $item_fee->get_name();
@@ -1020,9 +1029,16 @@ function create_json_openfactura($order, $openfactura_registry)
             $mnt_total = $mnt_total + $fee_total;
             $items = ["NroLinDet" => $i, 'NmbItem' => substr($fee_name, 0, 80), 'QtyItem' => 1, 'PrcItem' => $fee_amount, 'MontoItem' => $fee_total];
         }
-
-        $i++;
-        array_push($detalle, $items);
+        if (intval($fee_total) == 0) {
+            if ($note == '') {
+                $note = 'Incluido sin costo en la compra:';
+            }
+            $note .= '<br/> *';
+            $note .= ' ' . 1 . ' ' . substr($fee_name, 0, 80);
+        } else {
+            $i++;
+            array_push($detalle, $items);
+        }
     }
 
     //Loop through order shipping items
@@ -1045,8 +1061,21 @@ function create_json_openfactura($order, $openfactura_registry)
             $mnt_total = $mnt_total + intval($monto_item);
             $items = ["NroLinDet" => $i, 'NmbItem' => substr($shipping_item->get_name(), 0, 80), 'QtyItem' => 1, 'PrcItem' => round($prc_item, 6), 'MontoItem' => intval($monto_item)];
         }
-        $i++;
-        array_push($detalle, $items);
+        if (intval($monto_item) == 0) {
+            if ($note == '') {
+                $note = 'Incluido sin costo en la compra:';
+            }
+            $note .= '<br/> *';
+            $note .= ' ' . 1 . ' ' . substr($shipping_item->get_name(), 0, 80);
+        } else {
+            $i++;
+            array_push($detalle, $items);
+        }
+    }
+    if (intval($order->get_total()) < 10) {
+        $note = "No se permiten emisiones con un valor menor a 10 CLP.";
+        $order->add_order_note($note);
+        return $order;
     }
     if ($falg_prices_include_tax == true) {
         if ($is_exe == true && $is_afecta == true) {
@@ -1092,6 +1121,9 @@ function create_json_openfactura($order, $openfactura_registry)
     $document_send = array_merge($document_send, $self_service);
     $document_send = array_merge($document_send, $dte);
     $document_send = array_merge($document_send, $custom);
+    if ($note != '') {
+        $document_send = array_merge($document_send, ["notaInf" => $note]);
+    }
     $document_send = json_encode($document_send, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     if (is_array($document_send) || is_object($document_send)) {
         error_log(print_r($document_send, true));
