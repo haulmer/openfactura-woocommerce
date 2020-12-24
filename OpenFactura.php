@@ -943,16 +943,11 @@ function create_json_openfactura($order, $openfactura_registry)
         }
     }
     $i = 1;
-    $isCoupon = false;
-    foreach ($order->get_coupon_codes() as $coupon_code) {
-        $isCoupon = true;
-        $coupon = new WC_Coupon($coupon_code);
-    }
 
     foreach ($order->get_items() as $item) {
         $product = $item->get_product();
         $name_product = $product->get_name();
-        $description_product = $product->get_description();
+        $description_product = strip_tags(html_entity_decode($product->get_description()));
         if (empty($name_product)) {
             $name_product = "item";
         }
@@ -1215,12 +1210,10 @@ function misha_editable_order_meta_general($order)
     if (!empty($document_type)) {
         ?>  <p>Tipo de documento: <?php echo $document_type; ?> </p>
         <?php
-
     }
     if (!empty($serial_number)) {
         ?> <p>Folio: <?php echo $serial_number; ?> </p> 
         <?php
-
     }
 }
 
