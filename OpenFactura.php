@@ -527,7 +527,7 @@ function sub_menu_option_openfactura()
     global $wpdb;
     $apikey = '928e15a2d14d4a6292345f04960f4bd3';
     $openfactura_registry = $wpdb->get_results("SELECT * FROM  " . $wpdb->prefix . "openfactura_registry where is_active=1");
-    ?>
+?>
     <div class="of-whmcs">
         <div class="wrapper">
             <div class="wrapper_content">
@@ -572,10 +572,10 @@ function sub_menu_option_openfactura()
                     <div class="checkBoxContainer">
                         <div class="container">
                             <input type="checkbox" id="check0" name="demo" value=<?php if (!empty($openfactura_registry)) {
-                                                                                    echo $openfactura_registry[0]->is_demo;
-                                                                                    if ($openfactura_registry[0]->is_demo == 1) { ?> checked <?php 
-                                                                                                                                        }
-                                                                                                                                    } ?> />
+                                                                                        echo $openfactura_registry[0]->is_demo;
+                                                                                        if ($openfactura_registry[0]->is_demo == 1) { ?> checked <?php
+                                                                                                                                            }
+                                                                                                                                        } ?> />
                             <label for="check0" class="md-checkbox"></label>
                         </div>
 
@@ -591,9 +591,9 @@ function sub_menu_option_openfactura()
                         <div class="container">
                             <input type="checkbox" id="check1" name="automatic39" value=<?php if (!empty($openfactura_registry)) {
                                                                                             echo $openfactura_registry[0]->generate_boleta;
-                                                                                            if ($openfactura_registry[0]->generate_boleta == 1) { ?> checked <?php 
-                                                                                                                                                        }
-                                                                                                                                                    } ?> />
+                                                                                            if ($openfactura_registry[0]->generate_boleta == 1) { ?> checked <?php
+                                                                                                                                                            }
+                                                                                                                                                        } ?> />
                             <label for="check1" class="md-checkbox"></label>
                         </div>
 
@@ -610,7 +610,7 @@ function sub_menu_option_openfactura()
                         <div class="container">
                             <input type="checkbox" id="check2" name="allow33" value=<?php if (!empty($openfactura_registry)) {
                                                                                         echo $openfactura_registry[0]->allow_factura;
-                                                                                        if ($openfactura_registry[0]->allow_factura == 1) { ?> checked <?php 
+                                                                                        if ($openfactura_registry[0]->allow_factura == 1) { ?> checked <?php
                                                                                                                                                     }
                                                                                                                                                 } ?> />
                             <label for="check2" class="md-checkbox"></label>
@@ -631,7 +631,7 @@ function sub_menu_option_openfactura()
                         <div class="container">
                             <input type="checkbox" id="check5" name="product-description" value=<?php if (!empty($openfactura_registry)) {
                                                                                                     echo $openfactura_registry[0]->is_description;
-                                                                                                    if ($openfactura_registry[0]->is_description == 1) { ?> checked <?php 
+                                                                                                    if ($openfactura_registry[0]->is_description == 1) { ?> checked <?php
                                                                                                                                                                 }
                                                                                                                                                             } ?> />
                             <label for="check5" class="md-checkbox"></label>
@@ -649,7 +649,7 @@ function sub_menu_option_openfactura()
                         <div class="container">
                             <input type="checkbox" id="check6" name="email-link-selfservice" value=<?php if (!empty($openfactura_registry)) {
                                                                                                         echo $openfactura_registry[0]->is_email_link_selfservice;
-                                                                                                        if ($openfactura_registry[0]->is_email_link_selfservice == 1) { ?> checked <?php 
+                                                                                                        if ($openfactura_registry[0]->is_email_link_selfservice == 1) { ?> checked <?php
                                                                                                                                                                                 }
                                                                                                                                                                             } ?> />
                             <label for="check6" class="md-checkbox"></label>
@@ -667,7 +667,7 @@ function sub_menu_option_openfactura()
                         <div class="container">
                             <input type="checkbox" id="check3" name="enableLogo" value=<?php if (!empty($openfactura_registry)) {
                                                                                             echo $openfactura_registry[0]->show_logo;
-                                                                                            if ($openfactura_registry[0]->show_logo == 1) { ?> checked <?php 
+                                                                                            if ($openfactura_registry[0]->show_logo == 1) { ?> checked <?php
                                                                                                                                                     }
                                                                                                                                                 } ?> />
                             <label for="check3" class="md-checkbox"></label>
@@ -817,7 +817,7 @@ function sub_menu_option_openfactura()
             </form>
         </div>
     </div>
-<?php
+    <?php
 
 }
 
@@ -904,7 +904,16 @@ function create_json_openfactura($order, $openfactura_registry)
     } else {
         $allow_factura = false;
     }
-    $self_service["selfService"] = ["issueBoleta" => $generate_boleta, "allowFactura" => $allow_factura, "documentReference" => [["type" => "801", "ID" => $order->get_id(), "date" => $date]]];
+    $self_service["selfService"] = [
+        "issueBoleta" => $generate_boleta,
+        "allowFactura" => $allow_factura,
+        "documentReference" => [
+            [
+                "type" => "801",
+                "ID" => $order->get_id(),
+                "date" => $date]
+            ]
+        ];
     $is_exe = false;
     $is_afecta = false;
     $document_type = '';
@@ -944,6 +953,8 @@ function create_json_openfactura($order, $openfactura_registry)
     }
     $i = 1;
 
+    $order->add_order_note(json_encode($order->get_items()));
+
     foreach ($order->get_items() as $item) {
         $product = $item->get_product();
         $name_product = $product->get_name();
@@ -954,44 +965,104 @@ function create_json_openfactura($order, $openfactura_registry)
         if ($item->get_total_tax() == 0) {
             //exenta
             $PrcItem = round($item->get_subtotal() / $item->get_quantity(), 6);
-            $MontoItem = round(($item->get_quantity() * ($PrcItem)), 0);
+            $MontoItem = round(($item->get_quantity() * round($PrcItem)), 0);
             $mnt_exe = $mnt_exe + $MontoItem;
             if ($openfactura_registry->is_description == '1' && !empty($description_product)) {
                 if ($item->get_subtotal() == $item->get_total()) {
-                    $items = ["NroLinDet" => $i, 'NmbItem' => substr($name_product, 0, 80), 'DscItem' => substr($description_product, 0, 1000), 'QtyItem' => $item->get_quantity(), 'PrcItem' => intval($PrcItem), 'MontoItem' => $MontoItem, 'IndExe' => 1];
+                    $items = [
+                        "NroLinDet" => $i,
+                        'NmbItem' => substr($name_product, 0, 80),
+                        'DscItem' => substr($description_product, 0, 1000),
+                        'QtyItem' => $item->get_quantity(),
+                        'PrcItem' => round($PrcItem),
+                        'MontoItem' => $MontoItem,
+                        'IndExe' => 1
+                    ];
                 } else {
                     $descuento = $item->get_subtotal() - $item->get_total();
-                    $items = ["NroLinDet" => $i, 'NmbItem' => substr($name_product, 0, 80), 'DscItem' => substr($description_product, 0, 1000), 'QtyItem' => $item->get_quantity(), 'PrcItem' => intval($PrcItem), 'MontoItem' => $MontoItem - round($descuento, 0), 'IndExe' => 1, 'DescuentoMonto' => round($descuento, 0)];
+                    $items = [
+                        "NroLinDet" => $i,
+                        'NmbItem' => substr($name_product, 0, 80),
+                        'DscItem' => substr($description_product, 0, 1000),
+                        'QtyItem' => $item->get_quantity(),
+                        'PrcItem' => round($PrcItem),
+                        'MontoItem' => $MontoItem - round($descuento, 0),
+                        'IndExe' => 1,
+                        'DescuentoMonto' => round($descuento, 0)
+                    ];
                     $mnt_exe = $mnt_exe - round($descuento, 0);
                 }
             } else {
                 if ($item->get_subtotal() == $item->get_total()) {
-                    $items = ["NroLinDet" => $i, 'NmbItem' => substr($name_product, 0, 80), 'QtyItem' => $item->get_quantity(), 'PrcItem' => intval($PrcItem), 'MontoItem' => $MontoItem, 'IndExe' => 1];
+                    $items = [
+                        "NroLinDet" => $i,
+                        'NmbItem' => substr($name_product, 0, 80),
+                        'QtyItem' => $item->get_quantity(),
+                        'PrcItem' => round($PrcItem),
+                        'MontoItem' => $MontoItem,
+                        'IndExe' => 1
+                    ];
                 } else {
                     $descuento = $item->get_subtotal() - $item->get_total();
-                    $items = ["NroLinDet" => $i, 'NmbItem' => substr($name_product, 0, 80), 'QtyItem' => $item->get_quantity(), 'PrcItem' => intval($PrcItem), 'MontoItem' => $MontoItem - round($descuento, 0), 'IndExe' => 1, 'DescuentoMonto' => round($descuento, 0)];
+                    $items = [
+                        "NroLinDet" => $i,
+                        'NmbItem' => substr($name_product, 0, 80),
+                        'QtyItem' => $item->get_quantity(),
+                        'PrcItem' => round($PrcItem),
+                        'MontoItem' => $MontoItem - round($descuento, 0),
+                        'IndExe' => 1,
+                        'DescuentoMonto' => round($descuento, 0)
+                    ];
                     $mnt_exe = $mnt_exe - round($descuento, 0);
                 }
             }
         } else {
             //afecta
             $PrcItem = round($item->get_subtotal() / $item->get_quantity(), 6);
-            $MontoItem = round(($item->get_quantity() * ($PrcItem)), 0);
+            $MontoItem = round(($item->get_quantity() * round($PrcItem)), 0);
             $mnt_total = $mnt_total + $MontoItem;
             if ($openfactura_registry->is_description == '1' && !empty($description_product)) {
                 if ($item->get_subtotal() == $item->get_total()) {
-                    $items = ["NroLinDet" => $i, 'NmbItem' => substr($name_product, 0, 80), 'DscItem' => substr($description_product, 0, 1000), 'QtyItem' => $item->get_quantity(), 'PrcItem' => intval($PrcItem), 'MontoItem' => $MontoItem];
+                    $items = [
+                        "NroLinDet" => $i,
+                        'NmbItem' => substr($name_product, 0, 80),
+                        'DscItem' => substr($description_product, 0, 1000),
+                        'QtyItem' => $item->get_quantity(),
+                        'PrcItem' => round($PrcItem),
+                        'MontoItem' => $MontoItem
+                    ];
                 } else {
                     $descuento = $item->get_subtotal() - $item->get_total();
-                    $items = ["NroLinDet" => $i, 'NmbItem' => substr($name_product, 0, 80), 'DscItem' => substr($description_product, 0, 1000), 'QtyItem' => $item->get_quantity(), 'PrcItem' => intval($PrcItem), 'MontoItem' => $MontoItem - round($descuento, 0), 'DescuentoMonto' => round($descuento, 0)];
+                    $items = [
+                        "NroLinDet" => $i,
+                        'NmbItem' => substr($name_product, 0, 80),
+                        'DscItem' => substr($description_product, 0, 1000),
+                        'QtyItem' => $item->get_quantity(),
+                        'PrcItem' => round($PrcItem),
+                        'MontoItem' => $MontoItem - round($descuento, 0),
+                        'DescuentoMonto' => round($descuento, 0)
+                    ];
                     $mnt_total = $mnt_total - round($descuento, 0);
                 }
             } else {
                 if ($item->get_subtotal() == $item->get_total()) {
-                    $items = ["NroLinDet" => $i, 'NmbItem' => substr($name_product, 0, 80), 'QtyItem' => $item->get_quantity(), 'PrcItem' => intval($PrcItem), 'MontoItem' => $MontoItem];
+                    $items = [
+                        "NroLinDet" => $i,
+                        'NmbItem' => substr($name_product, 0, 80),
+                        'QtyItem' => $item->get_quantity(),
+                        'PrcItem' => round($PrcItem),
+                        'MontoItem' => $MontoItem
+                    ];
                 } else {
                     $descuento = $item->get_subtotal() - $item->get_total();
-                    $items = ["NroLinDet" => $i, 'NmbItem' => substr($name_product, 0, 80), 'QtyItem' => $item->get_quantity(), 'PrcItem' => intval($PrcItem), 'MontoItem' => $MontoItem - round($descuento, 0), 'DescuentoMonto' => round($descuento, 0)];
+                    $items = [
+                        "NroLinDet" => $i,
+                        'NmbItem' => substr($name_product, 0, 80),
+                        'QtyItem' => $item->get_quantity(),
+                        'PrcItem' => round($PrcItem),
+                        'MontoItem' => $MontoItem - round($descuento, 0),
+                        'DescuentoMonto' => round($descuento, 0)
+                    ];
                     $mnt_total = $mnt_total - round($descuento, 0);
                 }
             }
@@ -1019,10 +1090,22 @@ function create_json_openfactura($order, $openfactura_registry)
         }
         if ($fee_total_tax == 0) {
             $mnt_exe = $mnt_exe + $fee_total;
-            $items = ["NroLinDet" => $i, 'NmbItem' => substr($fee_name, 0, 80), 'QtyItem' => 1, 'PrcItem' => $fee_amount, 'MontoItem' => $fee_total, 'IndExe' => 1];
+            $items = [
+                "NroLinDet" => $i,
+                'NmbItem' => substr($fee_name, 0, 80),
+                'QtyItem' => 1, 'PrcItem' => $fee_amount,
+                'MontoItem' => $fee_total,
+                'IndExe' => 1
+            ];
         } else {
             $mnt_total = $mnt_total + $fee_total;
-            $items = ["NroLinDet" => $i, 'NmbItem' => substr($fee_name, 0, 80), 'QtyItem' => 1, 'PrcItem' => $fee_amount, 'MontoItem' => $fee_total];
+            $items = [
+                "NroLinDet" => $i,
+                'NmbItem' => substr($fee_name, 0, 80),
+                'QtyItem' => 1,
+                'PrcItem' => $fee_amount,
+                'MontoItem' => $fee_total
+            ];
         }
         if (intval($fee_total) == 0) {
             if ($note == '') {
@@ -1051,10 +1134,22 @@ function create_json_openfactura($order, $openfactura_registry)
         }
         if ($shipping_item->get_total_tax() == 0) {
             $mnt_exe = $mnt_exe + $monto_item;
-            $items = ["NroLinDet" => $i, 'NmbItem' => substr($shipping_item->get_name(), 0, 80), 'QtyItem' => 1, 'PrcItem' => round($prc_item, 6), 'MontoItem' => intval($monto_item), 'IndExe' => 1];
+            $items = [
+                "NroLinDet" => $i,
+                'NmbItem' => substr($shipping_item->get_name(), 0, 80),
+                'QtyItem' => 1, 'PrcItem' => round($prc_item, 6),
+                'MontoItem' => intval($monto_item),
+                'IndExe' => 1
+            ];
         } else {
             $mnt_total = $mnt_total + intval($monto_item);
-            $items = ["NroLinDet" => $i, 'NmbItem' => substr($shipping_item->get_name(), 0, 80), 'QtyItem' => 1, 'PrcItem' => round($prc_item, 6), 'MontoItem' => intval($monto_item)];
+            $items = [
+                "NroLinDet" => $i,
+                'NmbItem' => substr($shipping_item->get_name(), 0, 80),
+                'QtyItem' => 1,
+                'PrcItem' => round($prc_item, 6),
+                'MontoItem' => intval($monto_item)
+            ];
         }
         if (intval($monto_item) == 0) {
             if ($note == '') {
@@ -1076,29 +1171,51 @@ function create_json_openfactura($order, $openfactura_registry)
         if ($is_exe == true && $is_afecta == true) {
             //afecta and exenta
             $iva = round($mnt_total * 0.19);
-            $id_doc = array("FchEmis" => $date, "IndMntNeto" => 2);
-            $totales = array("MntNeto" => intval($mnt_total), "TasaIVA" => "19.00", "IVA" => $iva, "MntTotal" => (intval($mnt_total) + $iva + intval($mnt_exe)), 'MntExe' => intval($mnt_exe));
+            $id_doc = ["FchEmis" => $date, "IndMntNeto" => 2];
+            $totales = [
+                "MntNeto" => intval($mnt_total),
+                "TasaIVA" => "19.00",
+                "IVA" => $iva,
+                "MntTotal" => (intval($mnt_total) + $iva + intval($mnt_exe)),
+                'MntExe' => intval($mnt_exe)
+            ];
             $document_type = 'Boleta Electrónica Afecta';
         } else {
             //only afecta
             $iva = round($mnt_total * 0.19);
             $date = $order->get_date_paid('date');
-            $date = $date->date_i18n($format = 'Y-m-d');
-            $id_doc = array("FchEmis" => $date, "IndMntNeto" => 2);
-            $totales = array("MntNeto" => intval($mnt_total), "TasaIVA" => "19.00", "IVA" => $iva, "MntTotal" => intval($mnt_total + $iva));
+            $date = $date->date_i18n('Y-m-d');
+            $id_doc = ["FchEmis" => $date, "IndMntNeto" => 2];
+            $totales = [
+                "MntNeto" => intval($mnt_total),
+                "TasaIVA" => "19.00",
+                "IVA" => $iva,
+                "MntTotal" => intval($mnt_total + $iva)
+            ];
             $document_type = 'Boleta Electrónica Afecta';
         }
         $document_code = "39";
     } else {
         //only exenta
         $date = $order->get_date_paid('date');
-        $date = $date->date_i18n($format = 'Y-m-d');
-        $id_doc = array("FchEmis" => substr($date, 0, 10));
-        $totales = array("MntTotal" => intval($order->get_total()), 'MntExe' => intval($mnt_exe));
+        $date = $date->date_i18n('Y-m-d');
+        $id_doc = ["FchEmis" => substr($date, 0, 10)];
+        $totales = [
+            "MntTotal" => intval($order->get_total()),
+            'MntExe' => intval($mnt_exe)
+        ];
         $document_type = 'Boleta Electrónica Exenta (41)';
         $document_code = "41";
     }
-    $emisor = array("RUTEmisor" => substr($openfactura_registry->rut, 0, 10), "RznSocEmisor" => substr($openfactura_registry->razon_social, 0, 100), "GiroEmisor" => substr($openfactura_registry->glosa_descriptiva, 0, 80), "CdgSIISucur" => $openfactura_registry->cdgSIISucur, "DirOrigen" => substr($openfactura_registry->direccion_origen, 0, 60), "CmnaOrigen" => substr($openfactura_registry->comuna_origen, 0, 20), "Acteco" => $openfactura_registry->codigo_actividad_economica_active);
+    $emisor = [
+        "RUTEmisor" => substr($openfactura_registry->rut, 0, 10),
+        "RznSocEmisor" => substr($openfactura_registry->razon_social, 0, 100),
+        "GiroEmisor" => substr($openfactura_registry->glosa_descriptiva, 0, 80),
+        "CdgSIISucur" => $openfactura_registry->cdgSIISucur,
+        "DirOrigen" => substr($openfactura_registry->direccion_origen, 0, 60),
+        "CmnaOrigen" => substr($openfactura_registry->comuna_origen, 0, 20),
+        "Acteco" => $openfactura_registry->codigo_actividad_economica_active
+    ];
     $dte["dte"] = [
         "Encabezado" => [
             "IdDoc" => $id_doc,
@@ -1208,12 +1325,12 @@ function misha_editable_order_meta_general($order)
     $serial_number = get_post_meta($order->get_id(), '_invoice_serial', true);
     $document_code = get_post_meta($order->get_id(), '_document_code', true);
     if (!empty($document_type)) {
-        ?>  <p>Tipo de documento: <?php echo $document_type; ?> </p>
-        <?php
+    ?> <p>Tipo de documento: <?php echo $document_type; ?> </p>
+    <?php
     }
     if (!empty($serial_number)) {
-        ?> <p>Folio: <?php echo $serial_number; ?> </p> 
-        <?php
+    ?> <p>Folio: <?php echo $serial_number; ?> </p>
+<?php
     }
 }
 
@@ -1256,7 +1373,7 @@ function debug_log($order)
         error_log(print_r($order->get_billing_first_name(), true));
         error_log(print_r($order->get_billing_last_name(), true));
         error_log(print_r($order->get_billing_email(), true));
-    } else if (!empty($order->get_billing_email()) && !empty($order->get_billing_email())) {
+    } elseif (!empty($order->get_billing_email()) && !empty($order->get_billing_email())) {
         error_log(print_r($order->get_billing_first_name(), true));
         error_log(print_r($order->get_billing_email(), true));
     } else {
