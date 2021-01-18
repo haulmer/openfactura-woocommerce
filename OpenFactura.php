@@ -972,7 +972,7 @@ function create_json_openfactura($order, $openfactura_registry)
                     $items = [
                         "NroLinDet" => $i,
                         'NmbItem' => substr($name_product, 0, 80),
-                        'DscItem' => substr($description_product, 0, 1000),
+                        'DscItem' => substr($description_product, 0, 990),
                         'QtyItem' => $item->get_quantity(),
                         'PrcItem' => round($PrcItem),
                         'MontoItem' => $MontoItem,
@@ -983,7 +983,7 @@ function create_json_openfactura($order, $openfactura_registry)
                     $items = [
                         "NroLinDet" => $i,
                         'NmbItem' => substr($name_product, 0, 80),
-                        'DscItem' => substr($description_product, 0, 1000),
+                        'DscItem' => substr($description_product, 0, 990),
                         'QtyItem' => $item->get_quantity(),
                         'PrcItem' => round($PrcItem),
                         'MontoItem' => $MontoItem - round($descuento, 0),
@@ -1026,7 +1026,7 @@ function create_json_openfactura($order, $openfactura_registry)
                     $items = [
                         "NroLinDet" => $i,
                         'NmbItem' => substr($name_product, 0, 80),
-                        'DscItem' => substr($description_product, 0, 1000),
+                        'DscItem' => substr($description_product, 0, 990),
                         'QtyItem' => $item->get_quantity(),
                         'PrcItem' => round($PrcItem),
                         'MontoItem' => $MontoItem
@@ -1036,7 +1036,7 @@ function create_json_openfactura($order, $openfactura_registry)
                     $items = [
                         "NroLinDet" => $i,
                         'NmbItem' => substr($name_product, 0, 80),
-                        'DscItem' => substr($description_product, 0, 1000),
+                        'DscItem' => substr($description_product, 0, 990),
                         'QtyItem' => $item->get_quantity(),
                         'PrcItem' => round($PrcItem),
                         'MontoItem' => $MontoItem - round($descuento, 0),
@@ -1216,6 +1216,11 @@ function create_json_openfactura($order, $openfactura_registry)
         "CmnaOrigen" => substr($openfactura_registry->comuna_origen, 0, 20),
         "Acteco" => $openfactura_registry->codigo_actividad_economica_active
     ];
+    $sucursal_and_code = explode("|", $openfactura_registry->sucursal_active);
+    if (count($sucursal_and_code) == 2) {
+        $emisor["DirOrigen"] = substr($sucursal_and_code[0], 0, 60);
+        $emisor["CdgSIISucur"] = $sucursal_and_code[1];
+    }
     $dte["dte"] = [
         "Encabezado" => [
             "IdDoc" => $id_doc,

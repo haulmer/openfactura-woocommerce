@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## V1.0.17 2021-01-18
+### Fix
+- Fixed Description max lenght.
+- Fixed Direccion Sucursal displayed on ticket.
+
 ## V1.0.16 2021-01-12
 ### Fix
 - Fixed Monto Total calculation with decimals.
