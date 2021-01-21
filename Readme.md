@@ -3,9 +3,9 @@ Openfactura - WooCommerce
 - SitioWeb: https://www.openfactura.cl
 - Comunidad: [Chat Slack](https://communityinviter.com/apps/haulmer/haulmer)
 - Documentación: [API Rest](http://docsapi-openfactura.haulmer.com/)
-- Tutorial de instalación: [Haulmer Blog - Tutorial](https://www.haulmer.com/docs/como-instalar-el-plugin-de-openfactura-en-woocommerce/)
+- Tutorial de instalación: [Haulmer Blog - Tutorial](https://help.haulmer.com/hc/integraciones/como-instalar-el-plugin-de-openfactura-en-woocommerce-8f03230a-9bc5-4892-8e04-590c1618593a)
 
-<img alt="OpenFactura-WooCommerce" src="https://www.haulmer.com/docs/content/images/2020/01/3WocommerceOF.png" width="600px">
+<img alt="OpenFactura-WooCommerce" src="https://repository-images.githubusercontent.com/261556303/9c0ae680-8ee0-11ea-92ce-783a6a85f9e7" width="600px">
 
 
 OpenFactura es la solución de facturación electrónica N°1 de Chile, a través de este plugin/integración podrás disfrutar de todos sus beneficios.
