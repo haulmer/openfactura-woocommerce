@@ -920,6 +920,7 @@ function create_json_openfactura($order, $openfactura_registry)
     $mnt_exe = 0;
     $mnt_total = 0;
     $detalle = array();
+    $dsctos = array();
     $items = null;
     $note = '';
 
@@ -952,6 +953,7 @@ function create_json_openfactura($order, $openfactura_registry)
         }
     }
     $i = 1;
+    $idsto = 0;
 
     $order->add_order_note(json_encode($order->get_items()));
 
@@ -959,6 +961,7 @@ function create_json_openfactura($order, $openfactura_registry)
         $product = $item->get_product();
         $name_product = $product->get_name();
         $description_product = strip_tags(html_entity_decode($product->get_description()));
+        $is_exe = $item->get_subtotal() == $item->get_total();
         if (empty($name_product)) {
             $name_product = "item";
         }
@@ -968,7 +971,7 @@ function create_json_openfactura($order, $openfactura_registry)
             $MontoItem = round(($item->get_quantity() * round($PrcItem)), 0);
             $mnt_exe = $mnt_exe + $MontoItem;
             if ($openfactura_registry->is_description == '1' && !empty($description_product)) {
-                if ($item->get_subtotal() == $item->get_total()) {
+                if ($is_exe) {
                     $items = [
                         "NroLinDet" => $i,
                         'NmbItem' => substr($name_product, 0, 80),
@@ -993,7 +996,7 @@ function create_json_openfactura($order, $openfactura_registry)
                     $mnt_exe = $mnt_exe - round($descuento, 0);
                 }
             } else {
-                if ($item->get_subtotal() == $item->get_total()) {
+                if ($is_exe) {
                     $items = [
                         "NroLinDet" => $i,
                         'NmbItem' => substr($name_product, 0, 80),
@@ -1022,7 +1025,7 @@ function create_json_openfactura($order, $openfactura_registry)
             $MontoItem = round(($item->get_quantity() * round($PrcItem)), 0);
             $mnt_total = $mnt_total + $MontoItem;
             if ($openfactura_registry->is_description == '1' && !empty($description_product)) {
-                if ($item->get_subtotal() == $item->get_total()) {
+                if ($is_exe) {
                     $items = [
                         "NroLinDet" => $i,
                         'NmbItem' => substr($name_product, 0, 80),
@@ -1045,7 +1048,7 @@ function create_json_openfactura($order, $openfactura_registry)
                     $mnt_total = $mnt_total - round($descuento, 0);
                 }
             } else {
-                if ($item->get_subtotal() == $item->get_total()) {
+                if ($is_exe) {
                     $items = [
                         "NroLinDet" => $i,
                         'NmbItem' => substr($name_product, 0, 80),
@@ -1073,6 +1076,18 @@ function create_json_openfactura($order, $openfactura_registry)
             }
             $note .= '<br/> *';
             $note .= ' ' . 1 . ' ' . substr($name_product, 0, 80);
+        } elseif (intval($MontoItem) < 0) {
+            $idsto++;
+            $dcto = [
+                "NroLinDR" => $idsto,
+                "TpoMov" => "D",
+                "TpoValor" => "$",
+                "ValorDR" => strval($MontoItem * -1)
+            ];
+            if ($is_exe) {
+                $dcto["IndExeDR"] = 1;
+            }
+            array_push($dsctos, $dcto);
         } else {
             $i++;
             array_push($detalle, $items);
@@ -1113,6 +1128,15 @@ function create_json_openfactura($order, $openfactura_registry)
             }
             $note .= '<br/> *';
             $note .= ' ' . 1 . ' ' . substr($fee_name, 0, 80);
+        } elseif (intval($fee_total) < 0) {
+            $idsto++;
+            $dcto = [
+                "NroLinDR" => $idsto,
+                "TpoMov" => "D",
+                "TpoValor" => "$",
+                "ValorDR" => strval($fee_total * -1)
+            ];
+            array_push($dsctos, $dcto);
         } else {
             $i++;
             array_push($detalle, $items);
@@ -1157,6 +1181,15 @@ function create_json_openfactura($order, $openfactura_registry)
             }
             $note .= '<br/> *';
             $note .= ' ' . 1 . ' ' . substr($shipping_item->get_name(), 0, 80);
+        } elseif (intval($monto_item) < 0) {
+            $idsto++;
+            $dcto = [
+                "NroLinDR" => $idsto,
+                "TpoMov" => "D",
+                "TpoValor" => "$",
+                "ValorDR" => strval($monto_item * -1)
+            ];
+            array_push($dsctos, $dcto);
         } else {
             $i++;
             array_push($detalle, $items);
@@ -1226,7 +1259,9 @@ function create_json_openfactura($order, $openfactura_registry)
             "IdDoc" => $id_doc,
             "Emisor" => $emisor,
             "Totales" => $totales
-        ], "Detalle" => $detalle
+        ],
+        "Detalle" => $detalle,
+        "DscRcgGlobal" => $dsctos
     ];
     $custom['custom'] = [
         'origin' => 'WOOCOMMERCE'
@@ -1238,6 +1273,7 @@ function create_json_openfactura($order, $openfactura_registry)
     $document_send = array_merge($document_send, $self_service);
     $document_send = array_merge($document_send, $dte);
     $document_send = array_merge($document_send, $custom);
+    //$order->add_order_note(json_encode($document_send));
     if ($note != '') {
         $document_send = array_merge($document_send, ["notaInf" => $note]);
     }
