@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## V1.0.19 2021-02-25
+### Fix
+- Fixed encoding in item name and description.
+
 ## V1.0.18 2021-01-27
 ### Fix
 - Fixed negative values as discount.

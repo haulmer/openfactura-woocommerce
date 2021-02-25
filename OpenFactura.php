@@ -574,8 +574,8 @@ function sub_menu_option_openfactura()
                             <input type="checkbox" id="check0" name="demo" value=<?php if (!empty($openfactura_registry)) {
                                                                                         echo $openfactura_registry[0]->is_demo;
                                                                                         if ($openfactura_registry[0]->is_demo == 1) { ?> checked <?php
-                                                                                                                                            }
-                                                                                                                                        } ?> />
+                                                                                                                                                }
+                                                                                                                                            } ?> />
                             <label for="check0" class="md-checkbox"></label>
                         </div>
 
@@ -911,9 +911,10 @@ function create_json_openfactura($order, $openfactura_registry)
             [
                 "type" => "801",
                 "ID" => $order->get_id(),
-                "date" => $date]
+                "date" => $date
             ]
-        ];
+        ]
+    ];
     $is_exe = false;
     $is_afecta = false;
     $document_type = '';
@@ -964,6 +965,23 @@ function create_json_openfactura($order, $openfactura_registry)
         $is_exe = $item->get_subtotal() == $item->get_total();
         if (empty($name_product)) {
             $name_product = "item";
+        } else {
+            $name_product = trim(
+                filter_var(
+                    filter_var($name_product, FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_FLAG_NO_ENCODE_QUOTES),
+                    FILTER_UNSAFE_RAW,
+                    FILTER_FLAG_STRIP_HIGH
+                )
+            );
+        }
+        if (!empty($description_product)) {
+            $description_product = trim(
+                filter_var(
+                    filter_var($description_product, FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_FLAG_NO_ENCODE_QUOTES),
+                    FILTER_UNSAFE_RAW,
+                    FILTER_FLAG_STRIP_HIGH
+                )
+            );
         }
         if ($item->get_total_tax() == 0) {
             //exenta
