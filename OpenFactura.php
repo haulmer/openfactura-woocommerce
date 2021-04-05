@@ -877,10 +877,12 @@ function create_json_openfactura($order, $openfactura_registry)
     $response["response"] = ["FOLIO", "SELF_SERVICE"];
     if (!empty($order->get_billing_first_name()) && !empty($order->get_billing_last_name()) && !empty($order->get_billing_email())) {
         $customer["customer"] = ["fullName" => substr($order->get_billing_first_name() . " " . $order->get_billing_last_name(), 0, 100), "email" => substr($order->get_billing_email(), 0, 80)];
-    } elseif (!empty($order->get_billing_email()) && !empty($order->get_billing_email())) {
+    } elseif (!empty($order->get_billing_first_name()) && !empty($order->get_billing_email())) {
         $customer["customer"] = ["fullName" => substr($order->get_billing_first_name(), 0, 100), "email" => substr($order->get_billing_email(), 0, 80)];
-    } else {
+    } elseif (!empty($order->get_billing_first_name())) {
         $customer["customer"] = ["fullName" => substr($order->get_billing_first_name(), 0, 100)];
+    } elseif (!empty($order->get_billing_email())) {
+        $customer["customer"] = ["email" => substr($order->get_billing_email(), 0, 100)];
     }
 
     if (!empty($openfactura_registry->link_logo) && $openfactura_registry->show_logo) {
@@ -1286,7 +1288,9 @@ function create_json_openfactura($order, $openfactura_registry)
     ];
 
     $document_send = array_merge($document_send, $response);
-    $document_send = array_merge($document_send, $customer);
+    if (!empty($customer)) {
+        $document_send = array_merge($document_send, $customer);
+    }
     $document_send = array_merge($document_send, $customize_page);
     $document_send = array_merge($document_send, $self_service);
     $document_send = array_merge($document_send, $dte);
