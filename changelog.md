@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## V1.0.21 2021-05-05
+### Fix
+- Fixed total amount to display the one provided by woocomerce.
+
 ## V1.0.20 2021-04-05
 ### Fix
 - Fixed emission fail if customer info is empty.

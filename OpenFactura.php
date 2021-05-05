@@ -1229,7 +1229,7 @@ function create_json_openfactura($order, $openfactura_registry)
                 "MntNeto" => intval($mnt_total),
                 "TasaIVA" => "19.00",
                 "IVA" => $iva,
-                "MntTotal" => (intval($mnt_total) + $iva + intval($mnt_exe)),
+                "MntTotal" => intval($order->get_total()),
                 'MntExe' => intval($mnt_exe)
             ];
             $document_type = 'Boleta Electrónica Afecta';
@@ -1243,7 +1243,7 @@ function create_json_openfactura($order, $openfactura_registry)
                 "MntNeto" => intval($mnt_total),
                 "TasaIVA" => "19.00",
                 "IVA" => $iva,
-                "MntTotal" => intval($mnt_total + $iva)
+                "MntTotal" => intval($order->get_total())
             ];
             $document_type = 'Boleta Electrónica Afecta';
         }
