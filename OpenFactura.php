@@ -872,7 +872,6 @@ function so_payment_complete($order_id)
  */
 function create_json_openfactura($order, $openfactura_registry)
 {
-    $falg_prices_include_tax = false;
     $document_send = array();
     $response["response"] = ["FOLIO", "SELF_SERVICE"];
     if (!empty($order->get_billing_first_name()) && !empty($order->get_billing_last_name()) && !empty($order->get_billing_email())) {
@@ -917,8 +916,8 @@ function create_json_openfactura($order, $openfactura_registry)
             ]
         ]
     ];
-    $is_exe = false;
-    $is_afecta = false;
+    $is_exe = $order->get_total_tax() == 0;
+    $is_afecta = !$is_exe;
     $document_type = '';
     $mnt_exe = 0;
     $mnt_total = 0;
@@ -928,38 +927,32 @@ function create_json_openfactura($order, $openfactura_registry)
     $note = '';
 
     //Loop through order tax items searching is taxable
-    foreach ($order->get_items() as $item) {
+    /*foreach ($order->get_items() as $item) {
         if ($item->get_total_tax() == 0) {
             $is_exe = true;
         } else {
-            $falg_prices_include_tax = true;
             $is_afecta = true;
         }
     }
     //Loop through order shipping items searching is taxable
     foreach ($order->get_items('shipping') as $item_id => $shipping_item) {
         if ($shipping_item->get_total_tax() == 0) {
-            $is_exe = true;
+            $is_shipping_exe = true;
         } else {
-            $falg_prices_include_tax = true;
-            $is_afecta = true;
+            $falg_prices_include_tax = true; //revisar
         }
     }
     //Loop through order fee items searching is taxable
     foreach ($order->get_items('fee') as $item_id => $item_fee) {
         $fee_total_tax = $item_fee->get_total_tax();
         if ($fee_total_tax == 0) {
-            $is_exe = true;
+            $is_fee_exe = true;
         } else {
-            $falg_prices_include_tax = true;
-            $is_afecta = true;
+            $falg_prices_include_tax = true; //revisar
         }
-    }
+    }*/
     $i = 1;
     $idsto = 0;
-
-    $order->add_order_note(json_encode($order->get_items()));
-
     foreach ($order->get_items() as $item) {
         $product = $item->get_product();
         $name_product = $product->get_name();
@@ -990,105 +983,56 @@ function create_json_openfactura($order, $openfactura_registry)
             $PrcItem = round($item->get_subtotal() / $item->get_quantity(), 6);
             $MontoItem = round(($item->get_quantity() * round($PrcItem)), 0);
             $mnt_exe = $mnt_exe + $MontoItem;
+            $descuento = $item->get_subtotal() - $item->get_total();
             if ($openfactura_registry->is_description == '1' && !empty($description_product)) {
-                if ($is_exe) {
-                    $items = [
-                        "NroLinDet" => $i,
-                        'NmbItem' => substr($name_product, 0, 80),
-                        'DscItem' => substr($description_product, 0, 990),
-                        'QtyItem' => $item->get_quantity(),
-                        'PrcItem' => round($PrcItem),
-                        'MontoItem' => $MontoItem,
-                        'IndExe' => 1
-                    ];
-                } else {
-                    $descuento = $item->get_subtotal() - $item->get_total();
-                    $items = [
-                        "NroLinDet" => $i,
-                        'NmbItem' => substr($name_product, 0, 80),
-                        'DscItem' => substr($description_product, 0, 990),
-                        'QtyItem' => $item->get_quantity(),
-                        'PrcItem' => round($PrcItem),
-                        'MontoItem' => $MontoItem - round($descuento, 0),
-                        'IndExe' => 1,
-                        'DescuentoMonto' => round($descuento, 0)
-                    ];
-                    $mnt_exe = $mnt_exe - round($descuento, 0);
-                }
+                $items = [
+                    "NroLinDet" => $i,
+                    'NmbItem' => substr($name_product, 0, 80),
+                    'DscItem' => substr($description_product, 0, 990),
+                    'QtyItem' => $item->get_quantity(),
+                    'PrcItem' => round($PrcItem),
+                    'MontoItem' => $MontoItem - round($descuento, 0),
+                    'DescuentoMonto' => round($descuento, 0),
+                    'IndExe' => 1
+                ];
             } else {
-                if ($is_exe) {
-                    $items = [
-                        "NroLinDet" => $i,
-                        'NmbItem' => substr($name_product, 0, 80),
-                        'QtyItem' => $item->get_quantity(),
-                        'PrcItem' => round($PrcItem),
-                        'MontoItem' => $MontoItem,
-                        'IndExe' => 1
-                    ];
-                } else {
-                    $descuento = $item->get_subtotal() - $item->get_total();
-                    $items = [
-                        "NroLinDet" => $i,
-                        'NmbItem' => substr($name_product, 0, 80),
-                        'QtyItem' => $item->get_quantity(),
-                        'PrcItem' => round($PrcItem),
-                        'MontoItem' => $MontoItem - round($descuento, 0),
-                        'IndExe' => 1,
-                        'DescuentoMonto' => round($descuento, 0)
-                    ];
-                    $mnt_exe = $mnt_exe - round($descuento, 0);
-                }
+                $items = [
+                    "NroLinDet" => $i,
+                    'NmbItem' => substr($name_product, 0, 80),
+                    'QtyItem' => $item->get_quantity(),
+                    'PrcItem' => round($PrcItem),
+                    'MontoItem' => $MontoItem - round($descuento, 0),
+                    'DescuentoMonto' => round($descuento, 0),
+                    'IndExe' => 1
+                ];
             }
+            $mnt_exe = $mnt_exe - round($descuento, 0);
         } else {
             //afecta
             $PrcItem = round($item->get_subtotal() / $item->get_quantity(), 6);
             $MontoItem = round(($item->get_quantity() * round($PrcItem)), 0);
-            $mnt_total = $mnt_total + $MontoItem;
+            $descuento = $item->get_subtotal() - $item->get_total();
             if ($openfactura_registry->is_description == '1' && !empty($description_product)) {
-                if ($is_exe) {
-                    $items = [
-                        "NroLinDet" => $i,
-                        'NmbItem' => substr($name_product, 0, 80),
-                        'DscItem' => substr($description_product, 0, 990),
-                        'QtyItem' => $item->get_quantity(),
-                        'PrcItem' => round($PrcItem),
-                        'MontoItem' => $MontoItem
-                    ];
-                } else {
-                    $descuento = $item->get_subtotal() - $item->get_total();
-                    $items = [
-                        "NroLinDet" => $i,
-                        'NmbItem' => substr($name_product, 0, 80),
-                        'DscItem' => substr($description_product, 0, 990),
-                        'QtyItem' => $item->get_quantity(),
-                        'PrcItem' => round($PrcItem),
-                        'MontoItem' => $MontoItem - round($descuento, 0),
-                        'DescuentoMonto' => round($descuento, 0)
-                    ];
-                    $mnt_total = $mnt_total - round($descuento, 0);
-                }
+                $items = [
+                    "NroLinDet" => $i,
+                    'NmbItem' => substr($name_product, 0, 80),
+                    'DscItem' => substr($description_product, 0, 990),
+                    'QtyItem' => $item->get_quantity(),
+                    'PrcItem' => round($PrcItem),
+                    'MontoItem' => $MontoItem - round($descuento, 0),
+                    'DescuentoMonto' => round($descuento, 0)
+                ];
             } else {
-                if ($is_exe) {
-                    $items = [
-                        "NroLinDet" => $i,
-                        'NmbItem' => substr($name_product, 0, 80),
-                        'QtyItem' => $item->get_quantity(),
-                        'PrcItem' => round($PrcItem),
-                        'MontoItem' => $MontoItem
-                    ];
-                } else {
-                    $descuento = $item->get_subtotal() - $item->get_total();
-                    $items = [
-                        "NroLinDet" => $i,
-                        'NmbItem' => substr($name_product, 0, 80),
-                        'QtyItem' => $item->get_quantity(),
-                        'PrcItem' => round($PrcItem),
-                        'MontoItem' => $MontoItem - round($descuento, 0),
-                        'DescuentoMonto' => round($descuento, 0)
-                    ];
-                    $mnt_total = $mnt_total - round($descuento, 0);
-                }
+                $items = [
+                    "NroLinDet" => $i,
+                    'NmbItem' => substr($name_product, 0, 80),
+                    'QtyItem' => $item->get_quantity(),
+                    'PrcItem' => round($PrcItem),
+                    'MontoItem' => $MontoItem - round($descuento, 0),
+                    'DescuentoMonto' => round($descuento, 0)
+                ];
             }
+            $mnt_total += $MontoItem - round($descuento, 0);
         }
         if (intval($MontoItem) == 0) {
             if ($note == '') {
@@ -1124,7 +1068,7 @@ function create_json_openfactura($order, $openfactura_registry)
             $fee_name = "impuesto";
         }
         if ($fee_total_tax == 0) {
-            $mnt_exe = $mnt_exe + $fee_total;
+            $mnt_exe += $fee_total;
             $items = [
                 "NroLinDet" => $i,
                 'NmbItem' => substr($fee_name, 0, 80),
@@ -1133,7 +1077,11 @@ function create_json_openfactura($order, $openfactura_registry)
                 'IndExe' => 1
             ];
         } else {
-            $mnt_total = $mnt_total + $fee_total;
+            if ($is_exe) {
+                $is_exe = false;
+                $is_afecta = true;
+            }
+            $mnt_total += $fee_total;
             $items = [
                 "NroLinDet" => $i,
                 'NmbItem' => substr($fee_name, 0, 80),
@@ -1186,7 +1134,11 @@ function create_json_openfactura($order, $openfactura_registry)
                 'IndExe' => 1
             ];
         } else {
-            $mnt_total = $mnt_total + intval($monto_item);
+            if ($is_exe) {
+                $is_exe = false;
+                $is_afecta = true;
+            }
+            $mnt_total += intval($monto_item);
             $items = [
                 "NroLinDet" => $i,
                 'NmbItem' => substr($shipping_item->get_name(), 0, 80),
@@ -1220,36 +1172,20 @@ function create_json_openfactura($order, $openfactura_registry)
         $order->add_order_note($note);
         return $order;
     }
-    if ($falg_prices_include_tax == true) {
-        if ($is_exe == true && $is_afecta == true) {
-            //afecta and exenta
-            $iva = round($mnt_total * 0.19);
-            $id_doc = ["FchEmis" => $date, "IndMntNeto" => 2];
-            $totales = [
-                "MntNeto" => intval($mnt_total),
-                "TasaIVA" => "19.00",
-                "IVA" => $iva,
-                "MntTotal" => intval($order->get_total()),
-                'MntExe' => intval($mnt_exe)
-            ];
-            $document_type = 'Boleta Electrónica Afecta';
-        } else {
-            //only afecta
-            $iva = round($mnt_total * 0.19);
-            $date = $order->get_date_paid('date');
-            $date = $date->date_i18n('Y-m-d');
-            $id_doc = ["FchEmis" => $date, "IndMntNeto" => 2];
-            $totales = [
-                "MntNeto" => intval($mnt_total),
-                "TasaIVA" => "19.00",
-                "IVA" => $iva,
-                "MntTotal" => intval($order->get_total())
-            ];
-            $document_type = 'Boleta Electrónica Afecta';
-        }
+
+    if ($is_afecta) {
+        $iva = round(intval($mnt_total) * 0.19);
+        $id_doc = ["FchEmis" => $date,  "IndMntNeto" => 2];
+        $totales = [
+            "MntNeto" => intval($mnt_total),
+            "TasaIVA" => "19.00",
+            "IVA" => $iva,
+            'MntExe' => intval($mnt_exe),
+            "MntTotal" => intval($order->get_total())
+        ];
+        $document_type = 'Boleta Electrónica Afecta';
         $document_code = "39";
     } else {
-        //only exenta
         $date = $order->get_date_paid('date');
         $date = $date->date_i18n('Y-m-d');
         $id_doc = ["FchEmis" => substr($date, 0, 10)];
@@ -1260,6 +1196,8 @@ function create_json_openfactura($order, $openfactura_registry)
         $document_type = 'Boleta Electrónica Exenta (41)';
         $document_code = "41";
     }
+    //$order->add_order_note(json_encode($detalle));
+    //$order->add_order_note(json_encode($totales));
     $emisor = [
         "RUTEmisor" => substr($openfactura_registry->rut, 0, 10),
         "RznSocEmisor" => substr($openfactura_registry->razon_social, 0, 100),
