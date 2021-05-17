@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## V1.0.23 2021-05-12
+### Fix
+- Fixed montoItems calculations
+
 ## V1.0.22 2021-05-12
 ### Fix
 - Fixed calculations of amounts

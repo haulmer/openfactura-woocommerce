@@ -920,7 +920,7 @@ function create_json_openfactura($order, $openfactura_registry)
     $is_afecta = !$is_exe;
     $document_type = '';
     $mnt_exe = 0;
-    $mnt_total = 0;
+    $mnt_neto = 0;
     $detalle = array();
     $dsctos = array();
     $items = null;
@@ -980,9 +980,8 @@ function create_json_openfactura($order, $openfactura_registry)
         }
         if ($item->get_total_tax() == 0) {
             //exenta
-            $PrcItem = round($item->get_subtotal() / $item->get_quantity(), 6);
-            $MontoItem = round(($item->get_quantity() * round($PrcItem)), 0);
-            $mnt_exe = $mnt_exe + $MontoItem;
+            $PrcItem = round($item->get_subtotal()) / intval($item->get_quantity());
+            $MontoItem = round($item->get_subtotal());
             $descuento = $item->get_subtotal() - $item->get_total();
             if ($openfactura_registry->is_description == '1' && !empty($description_product)) {
                 $items = [
@@ -1006,11 +1005,11 @@ function create_json_openfactura($order, $openfactura_registry)
                     'IndExe' => 1
                 ];
             }
-            $mnt_exe = $mnt_exe - round($descuento, 0);
+            $mnt_exe += $MontoItem - round($descuento, 0);
         } else {
             //afecta
-            $PrcItem = round($item->get_subtotal() / $item->get_quantity(), 6);
-            $MontoItem = round(($item->get_quantity() * round($PrcItem)), 0);
+            $PrcItem = round($item->get_subtotal()) / intval($item->get_quantity());
+            $MontoItem = round($item->get_subtotal());
             $descuento = $item->get_subtotal() - $item->get_total();
             if ($openfactura_registry->is_description == '1' && !empty($description_product)) {
                 $items = [
@@ -1018,7 +1017,7 @@ function create_json_openfactura($order, $openfactura_registry)
                     'NmbItem' => substr($name_product, 0, 80),
                     'DscItem' => substr($description_product, 0, 990),
                     'QtyItem' => $item->get_quantity(),
-                    'PrcItem' => round($PrcItem),
+                    'PrcItem' => round($PrcItem, 4),
                     'MontoItem' => $MontoItem - round($descuento, 0),
                     'DescuentoMonto' => round($descuento, 0)
                 ];
@@ -1027,12 +1026,12 @@ function create_json_openfactura($order, $openfactura_registry)
                     "NroLinDet" => $i,
                     'NmbItem' => substr($name_product, 0, 80),
                     'QtyItem' => $item->get_quantity(),
-                    'PrcItem' => round($PrcItem),
+                    'PrcItem' => round($PrcItem, 4),
                     'MontoItem' => $MontoItem - round($descuento, 0),
                     'DescuentoMonto' => round($descuento, 0)
                 ];
             }
-            $mnt_total += $MontoItem - round($descuento, 0);
+            $mnt_neto += $MontoItem - round($descuento, 0);
         }
         if (intval($MontoItem) == 0) {
             if ($note == '') {
@@ -1081,7 +1080,7 @@ function create_json_openfactura($order, $openfactura_registry)
                 $is_exe = false;
                 $is_afecta = true;
             }
-            $mnt_total += $fee_total;
+            $mnt_neto += $fee_total;
             $items = [
                 "NroLinDet" => $i,
                 'NmbItem' => substr($fee_name, 0, 80),
@@ -1138,7 +1137,7 @@ function create_json_openfactura($order, $openfactura_registry)
                 $is_exe = false;
                 $is_afecta = true;
             }
-            $mnt_total += intval($monto_item);
+            $mnt_neto += intval($monto_item);
             $items = [
                 "NroLinDet" => $i,
                 'NmbItem' => substr($shipping_item->get_name(), 0, 80),
@@ -1174,10 +1173,10 @@ function create_json_openfactura($order, $openfactura_registry)
     }
 
     if ($is_afecta) {
-        $iva = round(intval($mnt_total) * 0.19);
+        $iva = round(intval($mnt_neto) * 0.19);
         $id_doc = ["FchEmis" => $date,  "IndMntNeto" => 2];
         $totales = [
-            "MntNeto" => intval($mnt_total),
+            "MntNeto" => intval($mnt_neto),
             "TasaIVA" => "19.00",
             "IVA" => $iva,
             'MntExe' => intval($mnt_exe),
