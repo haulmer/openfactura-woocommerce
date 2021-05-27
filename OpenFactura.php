@@ -991,7 +991,6 @@ function create_json_openfactura($order, $openfactura_registry)
                     'QtyItem' => $item->get_quantity(),
                     'PrcItem' => round($PrcItem),
                     'MontoItem' => $MontoItem - round($descuento, 0),
-                    'DescuentoMonto' => round($descuento, 0),
                     'IndExe' => 1
                 ];
             } else {
@@ -1001,9 +1000,11 @@ function create_json_openfactura($order, $openfactura_registry)
                     'QtyItem' => $item->get_quantity(),
                     'PrcItem' => round($PrcItem),
                     'MontoItem' => $MontoItem - round($descuento, 0),
-                    'DescuentoMonto' => round($descuento, 0),
                     'IndExe' => 1
                 ];
+            }
+            if ($descuento > 0) {
+                $items['DescuentoMonto'] = round($descuento, 0);
             }
             $mnt_exe += $MontoItem - round($descuento, 0);
         } else {
@@ -1018,8 +1019,7 @@ function create_json_openfactura($order, $openfactura_registry)
                     'DscItem' => substr($description_product, 0, 990),
                     'QtyItem' => $item->get_quantity(),
                     'PrcItem' => round($PrcItem, 4),
-                    'MontoItem' => $MontoItem - round($descuento, 0),
-                    'DescuentoMonto' => round($descuento, 0)
+                    'MontoItem' => $MontoItem - round($descuento, 0)
                 ];
             } else {
                 $items = [
@@ -1027,9 +1027,11 @@ function create_json_openfactura($order, $openfactura_registry)
                     'NmbItem' => substr($name_product, 0, 80),
                     'QtyItem' => $item->get_quantity(),
                     'PrcItem' => round($PrcItem, 4),
-                    'MontoItem' => $MontoItem - round($descuento, 0),
-                    'DescuentoMonto' => round($descuento, 0)
+                    'MontoItem' => $MontoItem - round($descuento, 0)
                 ];
+            }
+            if ($descuento > 0) {
+                $items['DescuentoMonto'] = round($descuento, 0);
             }
             $mnt_neto += $MontoItem - round($descuento, 0);
         }
@@ -1171,7 +1173,6 @@ function create_json_openfactura($order, $openfactura_registry)
         $order->add_order_note($note);
         return $order;
     }
-
     if ($is_afecta) {
         $iva = round(intval($mnt_neto) * 0.19);
         $id_doc = ["FchEmis" => $date,  "IndMntNeto" => 2];
@@ -1264,7 +1265,7 @@ function create_json_openfactura($order, $openfactura_registry)
         CURLOPT_HTTPHEADER => array(
             "Content-type: application/json",
             "apikey:" . $openfactura_registry->apikey,
-            "Idempotency-Key:" . $order->get_id()
+            "Idempotency-Key:" . $order->get_order_key()
         ),
     ));
     $response = curl_exec($curl);

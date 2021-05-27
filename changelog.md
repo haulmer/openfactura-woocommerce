@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## V1.0.24 2021-05-27
+### Fix
+- Removed DescuentoMonto with value 0
+- Changed Idempotency-Key by order_key
+
 ## V1.0.23 2021-05-12
 ### Fix
 - Fixed montoItems calculations
