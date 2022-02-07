@@ -486,36 +486,50 @@ const sendForm = () => {
 
     // emulating form's response
     setTimeout(() => {
-			const data = {
+        if(apikey != ""){
+            const data = {
 				action: 'save-data-openfactura-ajax',
 				demo:demo,
-				apikey:apikey,
+				apikey:apikey.replace(' ',''),
 				allow33: allow33,
 				automatic39: automatic39,
 				enableLogo: enableLogo,
-				urlLogo: urlLogo,
+				urlLogo: urlLogo.replace(' ',''),
 				sucursal: sucursal,
                 actividad: actividad,
                 description: description,
                 emailLinkSelfservice:emailLinkSelfservice
 			}
-			
+
 			if (!String(urlLogo).includes('http:')) {
 				jQuery.ajax({
 					url:main_vars.ajaxurl,
 					type:'post',
 					data:data,
 					success:function(res) {
-						Snackbar.show({
-						text: 'Datos guardados correctamente',
-						showAction: false,
-						width: '360px',
-						backgroundColor: 'rgba(0, 0, 0, .87)'
-						});
 						activateProgress(progressBar, true);
 						toggleFormDisabled(form, true);
 						if(res['data']=='insert'){
-							window.location.reload();
+                            Snackbar.show({
+                                text: 'Datos guardados correctamente',
+                                showAction: false,
+                                width: '360px',
+                                backgroundColor: 'rgba(0, 0, 0, .87)'
+                            });
+                            activateProgress(progressBar, true);
+							toggleFormDisabled(form, true);
+							return true;
+						}
+                        if(res['data']=='refresh'){
+                            Snackbar.show({
+                                text: 'Datos guardados correctamente, favor actualice la página',
+                                showAction: false,
+                                width: '420px',
+                                backgroundColor: 'rgba(0, 0, 0, .87)'
+                            });
+                            activateProgress(progressBar, true);
+							toggleFormDisabled(form, true);
+							return true;
 						}
 						if(res['data']=='error'){
 							Snackbar.show({
@@ -545,7 +559,7 @@ const sendForm = () => {
 			} else {
 				activateProgress(progressBar, true);
 				toggleFormDisabled(form, true);
-				jQuery('#logo-url').val('');
+				jQuery('#logourl').val('');
 				Snackbar.show({
 					text: 'Error en la URL del logo, debe utilizar protocolo HTTPS',
 					showAction: false,
@@ -553,7 +567,19 @@ const sendForm = () => {
 					backgroundColor: 'rgba(0, 0, 0, .87)'});
 				return false;
 			}
-    }, 4000);
+        }
+        else{
+            activateProgress(progressBar, true);
+            toggleFormDisabled(form, true);
+            Snackbar.show({
+                text: 'El campo "Api Key" no puede quedar vacío."',
+                showAction: false,
+                width: '360px',
+                backgroundColor: 'rgba(0, 0, 0, .87)'});
+            return false;
+        }
+			
+    }, 0);
 
     // process submit if form is valid
     return false;
@@ -570,22 +596,14 @@ jQuery('#update-button').click(event => {
 	
 	const data = {
 		action: 'update-data-openfactura-ajax',
-		apikey:apikey,
+		apikey: apikey,
 	}
 	jQuery.ajax({
 		url:main_vars.ajaxurl,
 		type:'post',
 		data:data,
 		success:function(res) {
-			Snackbar.show({
-			text: 'Datos actualizados correctamente',
-			showAction: false,
-			width: '360px',
-			backgroundColor: 'rgba(0, 0, 0, .87)'
-			});
-			activateProgress(progressBar, true);
-			toggleFormDisabled(form, true);
-			if(res['data']=='error'){
+            if(res['data']=='error'){
 				Snackbar.show({
 					text: 'Error al actualizar los datos del contribuyente',
 					showAction: false,
@@ -596,7 +614,28 @@ jQuery('#update-button').click(event => {
 				toggleFormDisabled(form, true);
 				return false;
 			}
-			return true;
+            if(res['data']=='refresh'){
+                Snackbar.show({
+                    text: 'Datos actualizados correctamente, favor actualice la página',
+                    showAction: false,
+                    width: '420px',
+                    backgroundColor: 'rgba(0, 0, 0, .87)'
+                });
+                activateProgress(progressBar, true);
+                toggleFormDisabled(form, true);
+                return true;
+            }
+            if(res['data']=='insert'){
+				Snackbar.show({
+                    text: 'Datos actualizados correctamente',
+                    showAction: false,
+                    width: '360px',
+                    backgroundColor: 'rgba(0, 0, 0, .87)'
+                });
+                activateProgress(progressBar, true);
+                toggleFormDisabled(form, true);
+                return true;
+			}
 		},
 		error: function(res){
 			Snackbar.show({
@@ -610,7 +649,6 @@ jQuery('#update-button').click(event => {
 			return false;
 		}
 	});
-
 })
 
 jQuery(document).ready(function () {

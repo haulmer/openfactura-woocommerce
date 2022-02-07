@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## V1.0.25 2022-01-26
+### Fix
+- Configuration Logic (Api Key, Demo, etc)
+- Changed Idempotency-Key for a combination: "WOOCOMMERCE_RUT_AAAA/MM/DD_HH:MM:SS_ID_ORDEN"
+
 ## V1.0.24 2021-05-27
 ### Fix
 - Removed DescuentoMonto with value 0
