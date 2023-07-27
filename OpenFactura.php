@@ -153,7 +153,7 @@ add_action('wp_ajax_nopriv_save-data-openfactura-ajax', 'save_data_openfactura_r
  * Save the new information about the plugin like the ApiKey and the permissions for the emission of bills and invoices.
  */
 function save_data_openfactura_registry(){
-    writeLogs("entra aca para actualizar 2");
+    //writeLogs("entra aca para actualizar 2");
     #   ╔═════════════════════════════╗
     #   ║   Check the checkbox info   ║
     #   ╚═════════════════════════════╝
@@ -250,8 +250,8 @@ function save_data_openfactura_registry(){
                 $data_act = explode("|",$actividad_economica_active);
                 $actividad = $data_act[0];
                 $codigo_actividad = $data_act[1];
-                writeLogs("demo");
-                writeLogs($demo);
+                //writeLogs("demo");
+                //writeLogs($demo);
                 $wpdb->update($wpdb->prefix . 'openfactura_registry',
                     array(
                         'is_demo' => $demo,
@@ -441,7 +441,7 @@ function update_data_openfactura_registry(){
             return wp_send_json_success(['error']);
         }
         $response = json_decode($response, true);
-        writeLogs($response);
+        //writeLogs($response);
 
         #   ╔═════════════════════════╗
         #   ║ Get the activities info ║
@@ -1030,8 +1030,8 @@ function so_payment_complete($order_id)
  */
 function create_json_openfactura($order, $openfactura_registry){
 
-    writeLogs("Registry");
-    writeLogs($openfactura_registry);
+    //writeLogs("Registry");
+    //writeLogs($openfactura_registry);
 
     /**
      * Array used to prepare request document to be sent to issue backend.
@@ -1162,7 +1162,8 @@ function create_json_openfactura($order, $openfactura_registry){
         $description_product = strip_tags(html_entity_decode($product->get_description()));
 
         /**
-         * Determine if item is tax free
+         * Determine if item is tax free.
+         * This shouldn't work. Item total doesn't include taxes.
          */
         $is_exe = $item->get_subtotal() == $item->get_total();
 
@@ -1196,8 +1197,9 @@ function create_json_openfactura($order, $openfactura_registry){
         if ($item->get_total_tax() == 0) {
             /**
              * Calculate item's individual value based on total and quantity; item's subtotal and discount.
+             * The total value will be lower than the subtotal when a coupon is applied.
              */
-            $PrcItem = round($item->get_subtotal()) / $item->get_quantity();
+            $PrcItem = round($item->get_subtotal(), 4) / $item->get_quantity();
             $MontoItem = round($item->get_subtotal());
             $descuento = $item->get_subtotal() - $item->get_total();
 
@@ -1244,7 +1246,7 @@ function create_json_openfactura($order, $openfactura_registry){
             /**
              * Calculate item's individual value based on total and quantity; item's subtotal and discount.
              */
-            $PrcItem = round($item->get_subtotal()) / $item->get_quantity();
+            $PrcItem = round($item->get_subtotal(), 4) / $item->get_quantity();
             $MontoItem = round($item->get_subtotal());
             $descuento = $item->get_subtotal() - $item->get_total();
 
@@ -1558,7 +1560,8 @@ function create_json_openfactura($order, $openfactura_registry){
 
         /**
          * Handle issue request's headers. This defines the net amount, the
-         * exempt amount and the tax of the order.
+         * exempt amount and the tax of the order. 
+         * IndMntNeto = 2 is a constant that the issue backend expects to receive.
          */
         $id_doc = ["FchEmis" => $date,  "IndMntNeto" => 2];
         $totales = [
@@ -1602,8 +1605,8 @@ function create_json_openfactura($order, $openfactura_registry){
     }
     //$order->add_order_note(json_encode($detalle));
     //$order->add_order_note(json_encode($totales));
-    writeLogs("cdgSIISucur ANTES DEL EMISOR");
-    writeLogs($openfactura_registry->cdgSIISucur);
+    //writeLogs("cdgSIISucur ANTES DEL EMISOR");
+    //writeLogs($openfactura_registry->cdgSIISucur);
 
     /**
      * Prepare emisor map for issue request headers. Get info from openfactura's
@@ -1618,8 +1621,8 @@ function create_json_openfactura($order, $openfactura_registry){
         "CmnaOrigen" => substr($openfactura_registry->comuna_origen, 0, 20),
         "Acteco" => $openfactura_registry->codigo_actividad_economica_active
     ];
-    writeLogs("cdgSIISucur DESPUES DEL EMISOR");
-    writeLogs($openfactura_registry->cdgSIISucur);
+    //writeLogs("cdgSIISucur DESPUES DEL EMISOR");
+    //writeLogs($openfactura_registry->cdgSIISucur);
 
     /**
      * Replace values in emisor with data from current active sucursal.
@@ -1629,8 +1632,8 @@ function create_json_openfactura($order, $openfactura_registry){
         $emisor["DirOrigen"] = substr($sucursal_and_code[0], 0, 60);
         $emisor["CdgSIISucur"] = $sucursal_and_code[1];
     }
-    writeLogs("cdgSIISucur DESPUES DEL EXPLODE");
-    writeLogs($emisor['CdgSIISucur']);
+    //writeLogs("cdgSIISucur DESPUES DEL EXPLODE");
+    //writeLogs($emisor['CdgSIISucur']);
 
     /**
      * Prepare document headers for issue request.
@@ -1664,16 +1667,19 @@ function create_json_openfactura($order, $openfactura_registry){
         $document_send = array_merge($document_send, ["notaInf" => $note]);
     }
 
+    error_log(print_r($order, true));
+    error_log(print_r($document_send, true));
+
     /**
      * Encode document send object as a json object
      */
     $document_send = json_encode($document_send, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
-    if (is_array($document_send) || is_object($document_send)) {
+    /*if (is_array($document_send) || is_object($document_send)) {
         error_log(print_r($document_send, true));
     } else {
         error_log($document_send);
-    }
+    }*/
 
     /**
      * Define API url based on current environment
@@ -1717,11 +1723,11 @@ function create_json_openfactura($order, $openfactura_registry){
     /**
      * Log response.
      */
-    if (is_array($response) || is_object($response)) {
+    /*if (is_array($response) || is_object($response)) {
         error_log(print_r($response, true));
     } else {
         error_log($response);
-    }
+    }*/
 
     /**
      * Handle response in woocommerce's order details interface in wordpress' admin panel
@@ -1788,11 +1794,11 @@ add_action('woocommerce_email_order_details', 'my_completed_order_email_instruct
 function my_completed_order_email_instructions($order, $sent_to_admin, $plain_text, $email)
 {
     // Only for processing and completed email notifications to customer
-    if (is_array($order) || is_object($order)) {
+    /*if (is_array($order) || is_object($order)) {
         error_log(print_r($order, true));
     } else {
         error_log($order);
-    }
+    }*/
     if (!('customer_completed_order' == $email->id)) {
         return;
     }
