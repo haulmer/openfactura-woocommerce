@@ -1246,8 +1246,8 @@ function create_json_openfactura($order, $openfactura_registry){
             /**
              * Calculate item's individual value based on total and quantity; item's subtotal and discount.
              */
-            $PrcItem = round($item->get_subtotal(), 4) / $item->get_quantity();
-            $MontoItem = round($item->get_subtotal());
+            $PrcItem = $item->get_subtotal() / $item->get_quantity();
+            $MontoItem = $item->get_subtotal();
             $descuento = $item->get_subtotal() - $item->get_total();
 
             /**
@@ -1260,7 +1260,7 @@ function create_json_openfactura($order, $openfactura_registry){
                     'DscItem' => substr($description_product, 0, 990),
                     'QtyItem' => $item->get_quantity(),
                     'PrcItem' => round($PrcItem, 4),
-                    'MontoItem' => $MontoItem - round($descuento, 0)
+                    'MontoItem' => round($MontoItem - $descuento, 0)
                 ];
             } else {
                 $items = [
@@ -1268,7 +1268,7 @@ function create_json_openfactura($order, $openfactura_registry){
                     'NmbItem' => substr($name_product, 0, 80),
                     'QtyItem' => $item->get_quantity(),
                     'PrcItem' => round($PrcItem, 4),
-                    'MontoItem' => $MontoItem - round($descuento, 0)
+                    'MontoItem' => round($MontoItem - $descuento, 0)
                 ];
             }
 
@@ -1282,7 +1282,7 @@ function create_json_openfactura($order, $openfactura_registry){
             /**
              * Add discounted item value to net amount counter.
              */
-            $mnt_neto += $MontoItem - round($descuento, 0);
+            $mnt_neto += $MontoItem - $descuento;
         }
 
         /**
@@ -1469,8 +1469,9 @@ function create_json_openfactura($order, $openfactura_registry){
             $items = [
                 "NroLinDet" => $i,
                 'NmbItem' => substr($shipping_item->get_name(), 0, 80),
-                'QtyItem' => 1, 'PrcItem' => round($prc_item, 6),
-                'MontoItem' => intval($monto_item),
+                'QtyItem' => 1,
+                'PrcItem' => round($prc_item, 4),
+                'MontoItem' => round($monto_item),
                 'IndExe' => 1
             ];
         /**
@@ -1489,7 +1490,7 @@ function create_json_openfactura($order, $openfactura_registry){
             /**
              * Add shipping amount to net amount counter.
              */
-            $mnt_neto += intval($monto_item);
+            $mnt_neto += round($monto_item);
 
             /**
              * Create an items map for the shipping item.
@@ -1499,7 +1500,7 @@ function create_json_openfactura($order, $openfactura_registry){
                 'NmbItem' => substr($shipping_item->get_name(), 0, 80),
                 'QtyItem' => 1,
                 'PrcItem' => round($prc_item, 6),
-                'MontoItem' => intval($monto_item)
+                'MontoItem' => round($monto_item)
             ];
         }
 
@@ -1556,7 +1557,7 @@ function create_json_openfactura($order, $openfactura_registry){
         /**
          * Calculate IVA from the net total and a fixed value, Chile's current IVA.
          */
-        $iva = round(intval($mnt_neto) * 0.19);
+        $iva = round($mnt_neto * 0.19);
 
         /**
          * Handle issue request's headers. This defines the net amount, the
@@ -1565,11 +1566,11 @@ function create_json_openfactura($order, $openfactura_registry){
          */
         $id_doc = ["FchEmis" => $date,  "IndMntNeto" => 2];
         $totales = [
-            "MntNeto" => intval($mnt_neto),
+            "MntNeto" => round($mnt_neto),
             "TasaIVA" => "19.00",
             "IVA" => $iva,
-            'MntExe' => intval($mnt_exe),
-            "MntTotal" => intval($order->get_total())
+            'MntExe' => round($mnt_exe),
+            "MntTotal" => round($order->get_total())
         ];
 
         /**
@@ -1593,8 +1594,8 @@ function create_json_openfactura($order, $openfactura_registry){
          */
         $id_doc = ["FchEmis" => substr($date, 0, 10)];
         $totales = [
-            "MntTotal" => intval($order->get_total()),
-            'MntExe' => intval($mnt_exe)
+            "MntTotal" => round($order->get_total()),
+            'MntExe' => round($mnt_exe)
         ];
 
         /**
