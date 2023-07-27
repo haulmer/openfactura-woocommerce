@@ -1033,8 +1033,19 @@ function create_json_openfactura($order, $openfactura_registry){
     writeLogs("Registry");
     writeLogs($openfactura_registry);
 
+    /**
+     * Array used to prepare request document to be sent to issue backend.
+     */
     $document_send = array();
+
+    /**
+     * Response header for issue request
+     */
     $response["response"] = ["FOLIO", "SELF_SERVICE"];
+
+    /**
+     * The next block gets the customer info.
+     */
     if (!empty($order->get_billing_first_name()) && !empty($order->get_billing_last_name()) && !empty($order->get_billing_email())) {
         $customer["customer"] = ["fullName" => substr($order->get_billing_first_name() . " " . $order->get_billing_last_name(), 0, 100), "email" => substr($order->get_billing_email(), 0, 80)];
     } elseif (!empty($order->get_billing_first_name()) && !empty($order->get_billing_email())) {
@@ -1045,6 +1056,9 @@ function create_json_openfactura($order, $openfactura_registry){
         $customer["customer"] = ["email" => substr($order->get_billing_email(), 0, 100)];
     }
 
+    /**
+     * Handle custom logo and order url
+     */
     if (!empty($openfactura_registry->link_logo) && $openfactura_registry->show_logo) {
         $customize_page["customizePage"] = ["urlLogo" => $openfactura_registry->link_logo, 'externalReference' => ["hyperlinkText" => "Orden de Compra #" . $order->get_id(), "hyperlinkURL" => wc_get_checkout_url() .
             "order-received/" . $order->get_order_number() . "/key="
@@ -1054,8 +1068,16 @@ function create_json_openfactura($order, $openfactura_registry){
             "order-received/" . $order->get_order_number() . "/key="
             . $order->get_order_key()]];
     }
+
+    /**
+     * Get order date
+     */
     $date = $order->get_date_paid('date');
     $date = $date->date_i18n($format = 'Y-m-d');
+
+    /**
+     * Get openfactura's plugin config. Handles permissions to get boleta and to allow factura.
+     */
     if ($openfactura_registry->generate_boleta == "1") {
         $generate_boleta = true;
     } else {
@@ -1066,6 +1088,10 @@ function create_json_openfactura($order, $openfactura_registry){
     } else {
         $allow_factura = false;
     }
+
+    /**
+     * Prepares selfservice header for issue request.
+     */
     $self_service["selfService"] = [
         "issueBoleta" => $generate_boleta,
         "allowFactura" => $allow_factura,
@@ -1077,6 +1103,10 @@ function create_json_openfactura($order, $openfactura_registry){
             ]
         ]
     ];
+
+    /**
+     * Defines variables to handle order.
+     */
     $is_exe = $order->get_total_tax() == 0;
     $is_afecta = !$is_exe;
     $document_type = '';
@@ -1112,13 +1142,33 @@ function create_json_openfactura($order, $openfactura_registry){
             $falg_prices_include_tax = true; evisar
         }
     }*/
+
+    /**
+     * Defines item (i) and discounts (idsto) counters.
+     */
     $i = 1;
     $idsto = 0;
+
+    /**
+     * For each item in the order
+     */
     foreach ($order->get_items() as $item) {
+
+        /**
+         * Get item name and description
+         */
         $product = $item->get_product();
         $name_product = $product->get_name();
         $description_product = strip_tags(html_entity_decode($product->get_description()));
+
+        /**
+         * Determine if item is tax free
+         */
         $is_exe = $item->get_subtotal() == $item->get_total();
+
+        /** 
+         * Sanitize item name and description. Assign a default item name should it be empty. 
+         */
         if (empty($name_product)) {
             $name_product = "item";
         } else {
@@ -1139,11 +1189,21 @@ function create_json_openfactura($order, $openfactura_registry){
                 )
             );
         }
+
+        /**
+         * If item is tax free:
+         */
         if ($item->get_total_tax() == 0) {
-            //exenta
+            /**
+             * Calculate item's individual value based on total and quantity; item's subtotal and discount.
+             */
             $PrcItem = round($item->get_subtotal()) / $item->get_quantity();
             $MontoItem = round($item->get_subtotal());
             $descuento = $item->get_subtotal() - $item->get_total();
+
+            /**
+             * Create item map for issue request. Add description to items map if item has one.
+             */
             if ($openfactura_registry->is_description == '1' && !empty($description_product)) {
                 $items = [
                     "NroLinDet" => $i,
@@ -1164,15 +1224,33 @@ function create_json_openfactura($order, $openfactura_registry){
                     'IndExe' => 1
                 ];
             }
+
+            /**
+             * Add discount to item map.
+             */
             if ($descuento > 0) {
                 $items['DescuentoMonto'] = round($descuento, 0);
             }
+
+            /**
+             * Add discounted item value to tax free amount counter.
+             */
             $mnt_exe += $MontoItem - round($descuento, 0);
+        
+        /**
+        * If the item has tax:
+        */
         } else {
-            //afecta
+            /**
+             * Calculate item's individual value based on total and quantity; item's subtotal and discount.
+             */
             $PrcItem = round($item->get_subtotal()) / $item->get_quantity();
             $MontoItem = round($item->get_subtotal());
             $descuento = $item->get_subtotal() - $item->get_total();
+
+            /**
+             * Create item map for issue request. Add description to items map if item has one.
+             */
             if ($openfactura_registry->is_description == '1' && !empty($description_product)) {
                 $items = [
                     "NroLinDet" => $i,
@@ -1191,17 +1269,33 @@ function create_json_openfactura($order, $openfactura_registry){
                     'MontoItem' => $MontoItem - round($descuento, 0)
                 ];
             }
+
+            /**
+             * Add discount amount to item map
+             */
             if ($descuento > 0) {
                 $items['DescuentoMonto'] = round($descuento, 0);
             }
+            
+            /**
+             * Add discounted item value to net amount counter.
+             */
             $mnt_neto += $MontoItem - round($descuento, 0);
         }
+
+        /**
+         * If the item is free, add a note pointing it out.
+         */
         if (intval($MontoItem) == 0) {
             if ($note == '') {
                 $note = 'Incluido sin costo en la compra:';
             }
             $note .= '<br/> *';
             $note .= ' ' . 1 . ' ' . substr($name_product, 0, 80);
+        
+        /**
+         * If the item amount is less that zero, create a discount map. Increase idsto counter.
+         */
         } elseif (intval($MontoItem) < 0) {
             $idsto++;
             $dcto = [
@@ -1210,27 +1304,58 @@ function create_json_openfactura($order, $openfactura_registry){
                 "TpoValor" => "$",
                 "ValorDR" => strval($MontoItem * -1)
             ];
+
+            /**
+             * Specify if discount is tax free.
+             */
             if ($is_exe) {
                 $dcto["IndExeDR"] = 1;
             }
+
+            /**
+             * Push map into dsctos array for issue request.
+             */
             array_push($dsctos, $dcto);
         } else {
+            /**
+             * Increase i counter and push items map into detalle array for issue request.
+             */
             $i++;
             array_push($detalle, $items);
         }
     }
 
-    //Loop through order fee items
+   /**
+    * For each fee item:
+    */
     foreach ($order->get_items('fee') as $item_id => $item_fee) {
+        /**
+         * Get fee's data.
+         */
         $fee_total_tax = $item_fee->get_total_tax();
         $fee_name = $item_fee->get_name();
         $fee_amount = round($item_fee->get_amount());
         $fee_total = round($item_fee->get_total());
+
+        /**
+         * If fee doesn't have a name assign a default one.
+         */
         if (empty($fee_name)) {
             $fee_name = "impuesto";
         }
+
+        /**
+         * If there's no fee tax, handle as a tax free item.
+         */
         if ($fee_total_tax == 0) {
+            /**
+             * Add fee amount to exempt amount counter.
+             */
             $mnt_exe += $fee_total;
+
+            /**
+             * Create fee map for issue request.
+             */
             $items = [
                 "NroLinDet" => $i,
                 'NmbItem' => substr($fee_name, 0, 80),
@@ -1238,12 +1363,28 @@ function create_json_openfactura($order, $openfactura_registry){
                 'MontoItem' => $fee_total,
                 'IndExe' => 1
             ];
+        
+        /**
+         * If the item has a tax, handle it as a taxable item.
+         */
         } else {
+            /**
+             * Taxable and exempt failsafe. Flips flags if this item has a tax and the tax free flags is enabled.
+             * I did not code this.
+             */
             if ($is_exe) {
                 $is_exe = false;
                 $is_afecta = true;
             }
+
+            /**
+             * Add fee amount to net amount counter.
+             */
             $mnt_neto += $fee_total;
+
+            /**
+             * Create fee map for issue request.
+             */
             $items = [
                 "NroLinDet" => $i,
                 'NmbItem' => substr($fee_name, 0, 80),
@@ -1252,12 +1393,19 @@ function create_json_openfactura($order, $openfactura_registry){
                 'MontoItem' => $fee_total
             ];
         }
+        /**
+         * If the fee is free add a note pointing it out.
+         */
         if (intval($fee_total) == 0) {
             if ($note == '') {
                 $note = 'Incluido sin costo en la compra:';
             }
             $note .= '<br/> *';
             $note .= ' ' . 1 . ' ' . substr($fee_name, 0, 80);
+        
+        /**
+         * If the fee amount is less than zero, create a discount map. Increase idcsto counter.
+         */
         } elseif (intval($fee_total) < 0) {
             $idsto++;
             $dcto = [
@@ -1266,15 +1414,28 @@ function create_json_openfactura($order, $openfactura_registry){
                 "TpoValor" => "$",
                 "ValorDR" => strval($fee_total * -1)
             ];
+
+            /**
+             * Push map into dsctos array for issue request.
+             */
             array_push($dsctos, $dcto);
         } else {
+            /**
+             * Increase i counter and push items map into detalle array for issue request.
+             */
             $i++;
             array_push($detalle, $items);
         }
     }
 
-    //Loop through order shipping items
+    /**
+     * For each shipping item:
+     */
     foreach ($order->get_items('shipping') as $item_id => $shipping_item) {
+        /**
+         * Get shipping amount and price. Assign as free should the shipping be free.
+         * I did not code this.
+         */
         if ($shipping_item->get_total() == 0) {
             $monto_item = 0;
             $prc_item = 1;
@@ -1282,12 +1443,27 @@ function create_json_openfactura($order, $openfactura_registry){
             $monto_item = round($shipping_item->get_total());
             $prc_item = round($shipping_item->get_total());
         }
+
+        /**
+         * Get shipping item's name. Assign a default name if it doesn't have one.
+         */
         $shipping_item_get_name = $shipping_item->get_name();
         if (empty($shipping_item_get_name)) {
             $shipping_item_get_name = "Reparto";
         }
+
+        /**
+         * If shipping is tax free, handle as such:
+         */
         if ($shipping_item->get_total_tax() == 0) {
+            /**
+             * Add shipping amount to tax free amount counter.
+             */
             $mnt_exe = $mnt_exe + $monto_item;
+
+            /**
+             * Create an items map for the shipping item.
+             */
             $items = [
                 "NroLinDet" => $i,
                 'NmbItem' => substr($shipping_item->get_name(), 0, 80),
@@ -1295,12 +1471,27 @@ function create_json_openfactura($order, $openfactura_registry){
                 'MontoItem' => intval($monto_item),
                 'IndExe' => 1
             ];
+        /**
+         * If the shipping is taxable
+         */
         } else {
+            /**
+             * Taxable and exempt failsafe. Flips flags if this item has a tax and the tax free flags is enabled.
+             * I did not code this.
+             */
             if ($is_exe) {
                 $is_exe = false;
                 $is_afecta = true;
             }
+
+            /**
+             * Add shipping amount to net amount counter.
+             */
             $mnt_neto += intval($monto_item);
+
+            /**
+             * Create an items map for the shipping item.
+             */
             $items = [
                 "NroLinDet" => $i,
                 'NmbItem' => substr($shipping_item->get_name(), 0, 80),
@@ -1309,12 +1500,20 @@ function create_json_openfactura($order, $openfactura_registry){
                 'MontoItem' => intval($monto_item)
             ];
         }
+
+        /**
+         * If the shipping is free add a note pointing it out.
+         */
         if (intval($monto_item) == 0) {
             if ($note == '') {
                 $note = 'Incluido sin costo en la compra:';
             }
             $note .= '<br/> *';
             $note .= ' ' . 1 . ' ' . substr($shipping_item->get_name(), 0, 80);
+        
+        /**
+         * If the shipping amount is less than zero, create a discount map. Increase idcsto counter.
+         */
         } elseif (intval($monto_item) < 0) {
             $idsto++;
             $dcto = [
@@ -1323,19 +1522,44 @@ function create_json_openfactura($order, $openfactura_registry){
                 "TpoValor" => "$",
                 "ValorDR" => strval($monto_item * -1)
             ];
+
+            /**
+             * Push map into dsctos array for issue request.
+             */
             array_push($dsctos, $dcto);
         } else {
+            /**
+             * Increase i counter and push items map into detalle array for issue request.
+             */
             $i++;
             array_push($detalle, $items);
         }
     }
+
+    /**
+     * If the order's total amount is less than $10 pesos, return a note to the order.
+     */
     if (intval($order->get_total()) < 10) {
         $note = "No se permiten emisiones con un valor menor a 10 CLP.";
         $order->add_order_note($note);
         return $order;
     }
+
+    /**
+     * If the afecta flag is active:
+     * This will trigger if there was at least one item with tax,
+     * of if the total tax amount isn't zero.
+     */
     if ($is_afecta) {
+        /**
+         * Calculate IVA from the net total and a fixed value, Chile's current IVA.
+         */
         $iva = round(intval($mnt_neto) * 0.19);
+
+        /**
+         * Handle issue request's headers. This defines the net amount, the
+         * exempt amount and the tax of the order.
+         */
         $id_doc = ["FchEmis" => $date,  "IndMntNeto" => 2];
         $totales = [
             "MntNeto" => intval($mnt_neto),
@@ -1344,16 +1568,35 @@ function create_json_openfactura($order, $openfactura_registry){
             'MntExe' => intval($mnt_exe),
             "MntTotal" => intval($order->get_total())
         ];
+
+        /**
+         * Define document type and code for issue request.
+         */
         $document_type = 'Boleta Electrónica Afecta';
         $document_code = "39";
+    
+    /**
+     * If the afecta flag isn't active, handle order as tax free.
+     */
     } else {
+        /**
+         * Get date for issue request header.
+         */
         $date = $order->get_date_paid('date');
         $date = $date->date_i18n('Y-m-d');
+
+        /**
+         * Handle issue request's headers. This defines the net amount and the tax free amount.
+         */
         $id_doc = ["FchEmis" => substr($date, 0, 10)];
         $totales = [
             "MntTotal" => intval($order->get_total()),
             'MntExe' => intval($mnt_exe)
         ];
+
+        /**
+         * Define document type and code for issue request.
+         */
         $document_type = 'Boleta Electrónica Exenta (41)';
         $document_code = "41";
     }
@@ -1361,6 +1604,11 @@ function create_json_openfactura($order, $openfactura_registry){
     //$order->add_order_note(json_encode($totales));
     writeLogs("cdgSIISucur ANTES DEL EMISOR");
     writeLogs($openfactura_registry->cdgSIISucur);
+
+    /**
+     * Prepare emisor map for issue request headers. Get info from openfactura's
+     * config table.
+     */
     $emisor = [
         "RUTEmisor" => substr($openfactura_registry->rut, 0, 10),
         "RznSocEmisor" => substr($openfactura_registry->razon_social, 0, 100),
@@ -1372,6 +1620,10 @@ function create_json_openfactura($order, $openfactura_registry){
     ];
     writeLogs("cdgSIISucur DESPUES DEL EMISOR");
     writeLogs($openfactura_registry->cdgSIISucur);
+
+    /**
+     * Replace values in emisor with data from current active sucursal.
+     */
     $sucursal_and_code = explode("|", $openfactura_registry->sucursal_active);
     if (count($sucursal_and_code) == 2) {
         $emisor["DirOrigen"] = substr($sucursal_and_code[0], 0, 60);
@@ -1379,6 +1631,10 @@ function create_json_openfactura($order, $openfactura_registry){
     }
     writeLogs("cdgSIISucur DESPUES DEL EXPLODE");
     writeLogs($emisor['CdgSIISucur']);
+
+    /**
+     * Prepare document headers for issue request.
+     */
     $dte["dte"] = [
         "Encabezado" => [
             "IdDoc" => $id_doc,
@@ -1392,6 +1648,9 @@ function create_json_openfactura($order, $openfactura_registry){
         'origin' => 'WOOCOMMERCE'
     ];
 
+    /**
+     * Merge arrays as needed by the api.
+     */
     $document_send = array_merge($document_send, $response);
     if (!empty($customer)) {
         $document_send = array_merge($document_send, $customer);
@@ -1404,13 +1663,21 @@ function create_json_openfactura($order, $openfactura_registry){
     if ($note != '') {
         $document_send = array_merge($document_send, ["notaInf" => $note]);
     }
+
+    /**
+     * Encode document send object as a json object
+     */
     $document_send = json_encode($document_send, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
     if (is_array($document_send) || is_object($document_send)) {
         error_log(print_r($document_send, true));
     } else {
         error_log($document_send);
     }
-    //generate document
+
+    /**
+     * Define API url based on current environment
+     */
     $url_generate = '';
     if ($openfactura_registry->is_demo == "1") {
         //dev environment
@@ -1419,6 +1686,10 @@ function create_json_openfactura($order, $openfactura_registry){
         //prod environment
         $url_generate = 'https://api.haulmer.com/v2/dte/document';
     }
+
+    /**
+     * Prepare POST request to API
+     */
     $curl = curl_init();
     curl_setopt_array($curl, array(
         CURLOPT_URL => $url_generate,
@@ -1435,15 +1706,26 @@ function create_json_openfactura($order, $openfactura_registry){
             "Idempotency-Key:" . "WOOCOMMERCE" . "_" . $emisor['rut'] . "_" . date("Y/m/d_H:i:s") . "_" . $order->get_order_key(),
         ),
     ));
+
+    /**
+     * Handle POST rquest and handle response
+     */
     $response = curl_exec($curl);
     $err = curl_error($curl);
     curl_close($curl);
 
+    /**
+     * Log response.
+     */
     if (is_array($response) || is_object($response)) {
         error_log(print_r($response, true));
     } else {
         error_log($response);
     }
+
+    /**
+     * Handle response in woocommerce's order details interface in wordpress' admin panel
+     */
     $response = json_decode($response, true);
     if (!empty($response['SELF_SERVICE']['url'])) {
         $note = __("Obten tu documento tributario en: " . $response['SELF_SERVICE']['url']);
