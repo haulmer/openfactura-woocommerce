@@ -3,7 +3,7 @@
  * Plugin Name: Woocommerce OpenFactura
  * Plugin URI: https://www.haulmer.com/
  * Description: Creación de boletas y facturas electrónicas
- * Version: 1.0.26-alpha.2
+ * Version: 1.0.26-alpha.3
  * Author: Haulmer
  * Author URI: https://www.haulmer.com/
  * Developer: Haulmer

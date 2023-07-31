@@ -4,7 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## Unreleased
+## V1.0.26_alpha.3 2023-07-28
+### Changes
+- Changed net ammount indicator to include IVA on items' net ammount.
+
+## Unreleased
 ## V1.0.26_alpha.2 2023-07-27
+### Changes
+- Chaged total net calculation to include all decimals. 
 
 ## Unreleased
 ## V1.0.26_alpha.1 2023-07-27

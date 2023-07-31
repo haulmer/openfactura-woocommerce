@@ -1246,9 +1246,14 @@ function create_json_openfactura($order, $openfactura_registry){
             /**
              * Calculate item's individual value based on total and quantity; item's subtotal and discount.
              */
-            $PrcItem = $item->get_subtotal() / $item->get_quantity();
+            /*$PrcItem = $item->get_subtotal() / $item->get_quantity();
             $MontoItem = $item->get_subtotal();
             $descuento = $item->get_subtotal() - $item->get_total();
+            */
+
+            $MontoItem = $item->get_subtotal() + $item->get_subtotal_tax();
+            $PrcItem = $MontoItem / $item->get_quantity();
+            $descuento = $MontoItem - ($item->get_total() + $item->get_total_tax());
 
             /**
              * Create item map for issue request. Add description to items map if item has one.
@@ -1282,7 +1287,7 @@ function create_json_openfactura($order, $openfactura_registry){
             /**
              * Add discounted item value to net amount counter.
              */
-            $mnt_neto += $MontoItem - $descuento;
+            $mnt_neto += round($MontoItem - $descuento, 0);
         }
 
         /**
@@ -1361,7 +1366,8 @@ function create_json_openfactura($order, $openfactura_registry){
             $items = [
                 "NroLinDet" => $i,
                 'NmbItem' => substr($fee_name, 0, 80),
-                'QtyItem' => 1, 'PrcItem' => $fee_amount,
+                'QtyItem' => 1, 
+                'PrcItem' => $fee_amount,
                 'MontoItem' => $fee_total,
                 'IndExe' => 1
             ];
@@ -1557,16 +1563,15 @@ function create_json_openfactura($order, $openfactura_registry){
         /**
          * Calculate IVA from the net total and a fixed value, Chile's current IVA.
          */
-        $iva = round($mnt_neto * 0.19);
-
+        $iva = round($mnt_neto * 0.19 / 1.19); 
         /**
          * Handle issue request's headers. This defines the net amount, the
          * exempt amount and the tax of the order. 
-         * IndMntNeto = 2 is a constant that the issue backend expects to receive.
+         * IndMntNeto = 1 is a constant that the issue backend expects to receive.
          */
-        $id_doc = ["FchEmis" => $date,  "IndMntNeto" => 2];
+        $id_doc = ["FchEmis" => $date ];
         $totales = [
-            "MntNeto" => round($mnt_neto),
+            "MntNeto" => round($mnt_neto / (1 + (19 /100))),
             "TasaIVA" => "19.00",
             "IVA" => $iva,
             'MntExe' => round($mnt_exe),
