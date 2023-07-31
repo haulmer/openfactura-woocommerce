@@ -1026,84 +1026,20 @@ function so_payment_complete($order_id)
 }
 
 /**
- * Create a new document to issue
+ * Create a new document to issue. This functions does the following:
+ * - Iterates the order's items, fees and shipping.
+ * - Returns the order and adds a error note to the order 
+ *   if the net amount is < 10 CLP or tax free discounts are < 0.
+ * - Gets the customer data.
+ * - Gets the order's hyperlink and custom logo.
+ * - Gets the plugin configuration for the document.
+ * - Prepares the document headers
+ * - Creates the document to send.
+ * - Sends the document to backend issue service.
+ * - Handles the response and shows it as order notes.
+ * - Returns the order.
  */
 function create_json_openfactura($order, $openfactura_registry){
-
-    //writeLogs("Registry");
-    //writeLogs($openfactura_registry);
-
-    /**
-     * Array used to prepare request document to be sent to issue backend.
-     */
-    $document_send = array();
-
-    /**
-     * Response header for issue request
-     */
-    $response["response"] = ["FOLIO", "SELF_SERVICE"];
-
-    /**
-     * The next block gets the customer info.
-     */
-    if (!empty($order->get_billing_first_name()) && !empty($order->get_billing_last_name()) && !empty($order->get_billing_email())) {
-        $customer["customer"] = ["fullName" => substr($order->get_billing_first_name() . " " . $order->get_billing_last_name(), 0, 100), "email" => substr($order->get_billing_email(), 0, 80)];
-    } elseif (!empty($order->get_billing_first_name()) && !empty($order->get_billing_email())) {
-        $customer["customer"] = ["fullName" => substr($order->get_billing_first_name(), 0, 100), "email" => substr($order->get_billing_email(), 0, 80)];
-    } elseif (!empty($order->get_billing_first_name())) {
-        $customer["customer"] = ["fullName" => substr($order->get_billing_first_name(), 0, 100)];
-    } elseif (!empty($order->get_billing_email())) {
-        $customer["customer"] = ["email" => substr($order->get_billing_email(), 0, 100)];
-    }
-
-    /**
-     * Handle custom logo and order url
-     */
-    if (!empty($openfactura_registry->link_logo) && $openfactura_registry->show_logo) {
-        $customize_page["customizePage"] = ["urlLogo" => $openfactura_registry->link_logo, 'externalReference' => ["hyperlinkText" => "Orden de Compra #" . $order->get_id(), "hyperlinkURL" => wc_get_checkout_url() .
-            "order-received/" . $order->get_order_number() . "/key="
-            . $order->get_order_key()]];
-    } else {
-        $customize_page["customizePage"] = ['externalReference' => ["hyperlinkText" => "Orden de Compra #" . $order->get_id(), "hyperlinkURL" => wc_get_checkout_url() .
-            "order-received/" . $order->get_order_number() . "/key="
-            . $order->get_order_key()]];
-    }
-
-    /**
-     * Get order date
-     */
-    $date = $order->get_date_paid('date');
-    $date = $date->date_i18n($format = 'Y-m-d');
-
-    /**
-     * Get openfactura's plugin config. Handles permissions to get boleta and to allow factura.
-     */
-    if ($openfactura_registry->generate_boleta == "1") {
-        $generate_boleta = true;
-    } else {
-        $generate_boleta = false;
-    }
-    if ($openfactura_registry->allow_factura == "1") {
-        $allow_factura = true;
-    } else {
-        $allow_factura = false;
-    }
-
-    /**
-     * Prepares selfservice header for issue request.
-     */
-    $self_service["selfService"] = [
-        "issueBoleta" => $generate_boleta,
-        "allowFactura" => $allow_factura,
-        "documentReference" => [
-            [
-                "type" => "801",
-                "ID" => $order->get_id(),
-                "date" => $date
-            ]
-        ]
-    ];
-
     /**
      * Defines variables to handle order.
      */
@@ -1116,32 +1052,6 @@ function create_json_openfactura($order, $openfactura_registry){
     $dsctos = array();
     $items = null;
     $note = '';
-
-    //Loop through order tax items searching is taxable
-    /*foreach ($order->get_items() as $item) {
-        if ($item->get_total_tax() == 0) {
-            $is_exe = true;
-        } else {
-            $is_afecta = true;
-        }
-    }
-    //Loop through order shipping items searching is taxable
-    foreach ($order->get_items('shipping') as $item_id => $shipping_item) {
-        if ($shipping_item->get_total_tax() == 0) {
-            $is_shipping_exe = true;
-        } else {
-            $falg_prices_include_tax = true; evisar
-        }
-    }
-    //Loop through order fee items searching is taxable
-    foreach ($order->get_items('fee') as $item_id => $item_fee) {
-        $fee_total_tax = $item_fee->get_total_tax();
-        if ($fee_total_tax == 0) {
-            $is_fee_exe = true;
-        } else {
-            $falg_prices_include_tax = true; evisar
-        }
-    }*/
 
     /**
      * Defines item (i) and discounts (idsto) counters.
@@ -1205,25 +1115,17 @@ function create_json_openfactura($order, $openfactura_registry){
             /**
              * Create item map for issue request. Add description to items map if item has one.
              */
+            $items = [
+                "NroLinDet" => $i,
+                'NmbItem' => substr($name_product, 0, 80),
+                'QtyItem' => $item->get_quantity(),
+                'PrcItem' => round($PrcItem, 0),
+                'MontoItem' => round($MontoItem - $descuento, 0),
+                'IndExe' => 1
+            ];
+            
             if ($openfactura_registry->is_description == '1' && !empty($description_product)) {
-                $items = [
-                    "NroLinDet" => $i,
-                    'NmbItem' => substr($name_product, 0, 80),
-                    'DscItem' => substr($description_product, 0, 990),
-                    'QtyItem' => $item->get_quantity(),
-                    'PrcItem' => round($PrcItem, 0),
-                    'MontoItem' => round($MontoItem - $descuento, 0),
-                    'IndExe' => 1
-                ];
-            } else {
-                $items = [
-                    "NroLinDet" => $i,
-                    'NmbItem' => substr($name_product, 0, 80),
-                    'QtyItem' => $item->get_quantity(),
-                    'PrcItem' => round($PrcItem, 0),
-                    'MontoItem' => round($MontoItem - $descuento, 0),
-                    'IndExe' => 1
-                ];
+                $items['DscItem'] = substr($description_product, 0, 990);
             }
 
             /**
@@ -1254,23 +1156,16 @@ function create_json_openfactura($order, $openfactura_registry){
             /**
              * Create item map for issue request. Add description to items map if item has one.
              */
+            $items = [
+                "NroLinDet" => $i,
+                'NmbItem' => substr($name_product, 0, 80),
+                'QtyItem' => $item->get_quantity(),
+                'PrcItem' => round($PrcItem, 0),
+                'MontoItem' => round($MontoItem - $descuento, 0)
+            ];
+            
             if ($openfactura_registry->is_description == '1' && !empty($description_product)) {
-                $items = [
-                    "NroLinDet" => $i,
-                    'NmbItem' => substr($name_product, 0, 80),
-                    'DscItem' => substr($description_product, 0, 990),
-                    'QtyItem' => $item->get_quantity(),
-                    'PrcItem' => round($PrcItem, 0),
-                    'MontoItem' => round($MontoItem - $descuento, 0)
-                ];
-            } else {
-                $items = [
-                    "NroLinDet" => $i,
-                    'NmbItem' => substr($name_product, 0, 80),
-                    'QtyItem' => $item->get_quantity(),
-                    'PrcItem' => round($PrcItem, 0),
-                    'MontoItem' => round($MontoItem - $descuento, 0)
-                ];
+                $items['DscItem'] = substr($description_product, 0, 990);
             }
 
             /**
@@ -1572,6 +1467,67 @@ function create_json_openfactura($order, $openfactura_registry){
     }
 
     /**
+     * Gets customer info: full name, last name and email.
+     */
+    $customerData = [];
+
+    if (!empty($order->get_billing_first_name())) {
+        $customerData["fullName"] = substr($order->get_billing_first_name(), 0, 100);
+    }
+
+    if (!empty($order->get_billing_last_name())) {
+        $customerData["fullName"] .= " " . substr($order->get_billing_last_name(), 0, 100 - strlen($customerData["fullName"]));
+    }
+
+    if (!empty($order->get_billing_email())) {
+        $customerData["email"] = substr($order->get_billing_email(), 0, 80);
+    }
+
+    $customer["customer"] = $customerData;
+
+    /**
+     * Handle order url and custom logo
+     */
+    $customize_page["customizePage"] = [
+        'externalReference' => [
+            "hyperlinkText" => "Orden de Compra #" . $order->get_id(),
+            "hyperlinkURL" => wc_get_checkout_url() . "order-received/" . $order->get_order_number() . "/key=" . $order->get_order_key()
+        ]
+    ];
+    
+    if (!empty($openfactura_registry->link_logo) && $openfactura_registry->show_logo) {
+        $customize_page["customizePage"]["urlLogo"] = $openfactura_registry->link_logo;
+    }
+
+    /**
+     * Get order date
+     */
+    $date = $order->get_date_paid('date');
+    $date = $date->date_i18n($format = 'Y-m-d');
+
+    /**
+     * Get openfactura's plugin config. Handles permissions to get boleta and to allow factura.
+     */
+    $generate_boleta = $openfactura_registry->generate_boleta == "1";
+
+    $allow_factura = $openfactura_registry->allow_factura == "1";
+
+    /**
+     * Prepares selfservice header for issue request.
+     */
+    $self_service["selfService"] = [
+        "issueBoleta" => $generate_boleta,
+        "allowFactura" => $allow_factura,
+        "documentReference" => [
+            [
+                "type" => "801",
+                "ID" => $order->get_id(),
+                "date" => $date
+            ]
+        ]
+    ];
+
+    /**
      * If the afecta flag is active:
      * This will trigger if there was at least one item with tax,
      * of if the total tax amount isn't zero.
@@ -1606,12 +1562,6 @@ function create_json_openfactura($order, $openfactura_registry){
      */
     } else {
         /**
-         * Get date for issue request header.
-         */
-        $date = $order->get_date_paid('date');
-        $date = $date->date_i18n('Y-m-d');
-
-        /**
          * Handle issue request's headers. This defines the net amount and the tax free amount.
          */
         $id_doc = ["FchEmis" => substr($date, 0, 10)];
@@ -1626,10 +1576,6 @@ function create_json_openfactura($order, $openfactura_registry){
         $document_type = 'Boleta Electrónica Exenta (41)';
         $document_code = "41";
     }
-    //$order->add_order_note(json_encode($detalle));
-    //$order->add_order_note(json_encode($totales));
-    //writeLogs("cdgSIISucur ANTES DEL EMISOR");
-    //writeLogs($openfactura_registry->cdgSIISucur);
 
     /**
      * Prepare emisor map for issue request headers. Get info from openfactura's
@@ -1644,8 +1590,6 @@ function create_json_openfactura($order, $openfactura_registry){
         "CmnaOrigen" => substr($openfactura_registry->comuna_origen, 0, 20),
         "Acteco" => $openfactura_registry->codigo_actividad_economica_active
     ];
-    //writeLogs("cdgSIISucur DESPUES DEL EMISOR");
-    //writeLogs($openfactura_registry->cdgSIISucur);
 
     /**
      * Replace values in emisor with data from current active sucursal.
@@ -1655,8 +1599,6 @@ function create_json_openfactura($order, $openfactura_registry){
         $emisor["DirOrigen"] = substr($sucursal_and_code[0], 0, 60);
         $emisor["CdgSIISucur"] = $sucursal_and_code[1];
     }
-    //writeLogs("cdgSIISucur DESPUES DEL EXPLODE");
-    //writeLogs($emisor['CdgSIISucur']);
 
     /**
      * Prepare document headers for issue request.
@@ -1675,6 +1617,16 @@ function create_json_openfactura($order, $openfactura_registry){
     ];
 
     /**
+     * Array used to prepare request document to be sent to issue backend.
+     */
+    $document_send = array();
+
+    /**
+     * Response header for issue request
+     */
+    $response["response"] = ["FOLIO", "SELF_SERVICE"];
+
+    /**
      * Merge arrays as needed by the api.
      */
     $document_send = array_merge($document_send, $response);
@@ -1685,7 +1637,7 @@ function create_json_openfactura($order, $openfactura_registry){
     $document_send = array_merge($document_send, $self_service);
     $document_send = array_merge($document_send, $dte);
     $document_send = array_merge($document_send, $custom);
-    //$order->add_order_note(json_encode($document_send));
+
     if ($note != '') {
         $document_send = array_merge($document_send, ["notaInf" => $note]);
     }

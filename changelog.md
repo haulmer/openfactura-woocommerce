@@ -4,27 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## V1.0.26_alpha.4 2023-07-28
+## V1.0.26_beta.1 2023-07-28
 ### Fix
+- Includes item's tax in the item net amount toal to avoid rouding precision errors.
+- Changes net ammount indicator to include IVA on items' net amount.
 - Fixes global discount's net not being added to net totals.
 - Fixes discounts wrongly marked as tax free.
-- Disallows tax free discounts when there's no tax free items
-- Removes decimals from PrcItem in document.
-
-## Unreleased
-## V1.0.26_alpha.3 2023-07-28
-### Changes
-- Changed net ammount indicator to include IVA on items' net ammount.
-
-## Unreleased
-## V1.0.26_alpha.2 2023-07-27
-### Changes
-- Chaged total net calculation to include all decimals. 
-
-## Unreleased
-## V1.0.26_alpha.1 2023-07-27
-### Changes
-- Changed item price calculation's round to include 4 decimals.
+- Disallows tax free discounts when there's no tax free items.
 
 ## V1.0.25 2022-01-26
 ### Fix
