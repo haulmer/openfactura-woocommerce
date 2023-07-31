@@ -1223,16 +1223,23 @@ function create_json_openfactura($order, $openfactura_registry){
             /**
              * Create item map for issue request. Add description to items map if item has one.
              */
-            $items = [
-                "NroLinDet" => $i,
-                'NmbItem' => substr($name_product, 0, 80),
-                'QtyItem' => $item->get_quantity(),
-                'PrcItem' => round($PrcItem, 0),
-                'MontoItem' => round($MontoItem - $descuento, 0)
-            ];
-            
             if ($openfactura_registry->is_description == '1' && !empty($description_product)) {
-                $items['DscItem'] = substr($description_product, 0, 990);
+                $items = [
+                    "NroLinDet" => $i,
+                    'NmbItem' => substr($name_product, 0, 80),
+                    'DscItem' => substr($description_product, 0, 990),
+                    'QtyItem' => $item->get_quantity(),
+                    'PrcItem' => round($PrcItem, 4),
+                    'MontoItem' => round($MontoItem - $descuento, 0)
+                ];
+            } else {
+                $items = [
+                    "NroLinDet" => $i,
+                    'NmbItem' => substr($name_product, 0, 80),
+                    'QtyItem' => $item->get_quantity(),
+                    'PrcItem' => round($PrcItem, 4),
+                    'MontoItem' => round($MontoItem - $descuento, 0)
+                ];
             }
 
             /**
@@ -1517,77 +1524,6 @@ function create_json_openfactura($order, $openfactura_registry){
         $order->add_order_note($note);
         return $order;
     }
-
-    /**
-     * If the tax free discount is greater than tax free net amount, return a note to the order.
-     */
-    if (intval($mnt_exe) < 0) {
-        $note = "No se permiten descuentos exentos que superen montos exentos." . "\n" .
-                "Reintente con un descuento afecto.";
-        $order->add_order_note($note);
-        return $order;
-    }
-
-    /**
-     * Gets customer info: full name, last name and email.
-     */
-    $customerData = [];
-
-    if (!empty($order->get_billing_first_name())) {
-        $customerData["fullName"] = substr($order->get_billing_first_name(), 0, 100);
-    }
-
-    if (!empty($order->get_billing_last_name())) {
-        $customerData["fullName"] .= " " . substr($order->get_billing_last_name(), 0, 100 - strlen($customerData["fullName"]));
-    }
-
-    if (!empty($order->get_billing_email())) {
-        $customerData["email"] = substr($order->get_billing_email(), 0, 80);
-    }
-
-    $customer["customer"] = $customerData;
-
-    /**
-     * Handle order url and custom logo
-     */
-    $customize_page["customizePage"] = [
-        'externalReference' => [
-            "hyperlinkText" => "Orden de Compra #" . $order->get_id(),
-            "hyperlinkURL" => wc_get_checkout_url() . "order-received/" . $order->get_order_number() . "/key=" . $order->get_order_key()
-        ]
-    ];
-    
-    if ($openfactura_registry->show_logo && !empty($openfactura_registry->link_logo)) {
-        $customize_page["customizePage"]["urlLogo"] = $openfactura_registry->link_logo;
-    }
-
-    /**
-     * Get order date
-     */
-    $date = $order->get_date_paid('date');
-    $date = $date->date_i18n($format = 'Y-m-d');
-
-    /**
-     * Get openfactura's plugin config. Handles permissions to get boleta and to allow factura.
-     */
-    $generate_boleta = $openfactura_registry->generate_boleta == "1";
-
-    $allow_factura = $openfactura_registry->allow_factura == "1";
-
-    /**
-     * Prepares selfservice header for issue request.
-     */
-    $self_service["selfService"] = [
-        "issueBoleta" => $generate_boleta,
-        "allowFactura" => $allow_factura,
-        "documentReference" => [
-            [
-                "type" => "801",
-                "ID" => $order->get_id(),
-                "date" => $date
-            ]
-        ]
-    ];
 
     /**
      * If the afecta flag is active:
