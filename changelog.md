@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## V1.0.26_alpha.4 2023-07-28
+### Fix
+- Fixed global discount's net not being added to net totals.
+
 ## Unreleased
 ## V1.0.26_alpha.3 2023-07-28
 ### Changes

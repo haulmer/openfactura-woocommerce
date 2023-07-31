@@ -1163,9 +1163,8 @@ function create_json_openfactura($order, $openfactura_registry){
 
         /**
          * Determine if item is tax free.
-         * This shouldn't work. Item total doesn't include taxes.
          */
-        $is_exe = $item->get_subtotal() == $item->get_total();
+        $is_exe = $item->get_total_tax() == 0;
 
         /** 
          * Sanitize item name and description. Assign a default item name should it be empty. 
@@ -1199,9 +1198,9 @@ function create_json_openfactura($order, $openfactura_registry){
              * Calculate item's individual value based on total and quantity; item's subtotal and discount.
              * The total value will be lower than the subtotal when a coupon is applied.
              */
-            $PrcItem = round($item->get_subtotal(), 4) / $item->get_quantity();
-            $MontoItem = round($item->get_subtotal());
-            $descuento = $item->get_subtotal() - $item->get_total();
+            $MontoItem = $item->get_subtotal();
+            $PrcItem = $MontoItem / $item->get_quantity();
+            $descuento = $MontoItem - $item->get_total();
 
             /**
              * Create item map for issue request. Add description to items map if item has one.
@@ -1212,8 +1211,8 @@ function create_json_openfactura($order, $openfactura_registry){
                     'NmbItem' => substr($name_product, 0, 80),
                     'DscItem' => substr($description_product, 0, 990),
                     'QtyItem' => $item->get_quantity(),
-                    'PrcItem' => round($PrcItem),
-                    'MontoItem' => $MontoItem - round($descuento, 0),
+                    'PrcItem' => round($PrcItem, 4),
+                    'MontoItem' => round($MontoItem - $descuento, 0),
                     'IndExe' => 1
                 ];
             } else {
@@ -1221,8 +1220,8 @@ function create_json_openfactura($order, $openfactura_registry){
                     "NroLinDet" => $i,
                     'NmbItem' => substr($name_product, 0, 80),
                     'QtyItem' => $item->get_quantity(),
-                    'PrcItem' => round($PrcItem),
-                    'MontoItem' => $MontoItem - round($descuento, 0),
+                    'PrcItem' => round($PrcItem, 4),
+                    'MontoItem' => round($MontoItem - $descuento, 0),
                     'IndExe' => 1
                 ];
             }
@@ -1236,8 +1235,10 @@ function create_json_openfactura($order, $openfactura_registry){
 
             /**
              * Add discounted item value to tax free amount counter.
+             * If the item's net amount is negative, it's a global discount.
+             * The value of the discount also has to be added to the tax free net total.
              */
-            $mnt_exe += $MontoItem - round($descuento, 0);
+            $mnt_exe += round($MontoItem - $descuento, 0);
         
         /**
         * If the item has tax:
@@ -1286,6 +1287,8 @@ function create_json_openfactura($order, $openfactura_registry){
             
             /**
              * Add discounted item value to net amount counter.
+             * If the item's net amount is negative, it's a global discount.
+             * The value of the discount also has to be added to the net total.
              */
             $mnt_neto += round($MontoItem - $descuento, 0);
         }
@@ -1377,8 +1380,9 @@ function create_json_openfactura($order, $openfactura_registry){
          */
         } else {
             /**
-             * Taxable and exempt failsafe. Flips flags if this item has a tax and the tax free flags is enabled.
-             * I did not code this.
+             * Taxable and exempt failsafe. Flips flags if this item has a tax
+             * and the tax free flags is enabled. This flags controls the whole
+             * order, not the item.
              */
             if ($is_exe) {
                 $is_exe = false;
@@ -1485,8 +1489,9 @@ function create_json_openfactura($order, $openfactura_registry){
          */
         } else {
             /**
-             * Taxable and exempt failsafe. Flips flags if this item has a tax and the tax free flags is enabled.
-             * I did not code this.
+             * Taxable and exempt failsafe. Flips flags if this item has a tax
+             * and the tax free flags is enabled. This flags controls the whole
+             * order, not the item.
              */
             if ($is_exe) {
                 $is_exe = false;
