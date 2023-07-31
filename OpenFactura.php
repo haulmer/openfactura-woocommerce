@@ -1247,11 +1247,6 @@ function create_json_openfactura($order, $openfactura_registry){
             /**
              * Calculate item's individual value based on total and quantity; item's subtotal and discount.
              */
-            /*$PrcItem = $item->get_subtotal() / $item->get_quantity();
-            $MontoItem = $item->get_subtotal();
-            $descuento = $item->get_subtotal() - $item->get_total();
-            */
-
             $MontoItem = $item->get_subtotal() + $item->get_subtotal_tax();
             $PrcItem = $MontoItem / $item->get_quantity();
             $descuento = $MontoItem - ($item->get_total() + $item->get_total_tax());
@@ -1308,11 +1303,19 @@ function create_json_openfactura($order, $openfactura_registry){
          */
         } elseif (intval($MontoItem) < 0) {
             $idsto++;
+            /**
+             * In Woocommerce, coupon discounts are divided between all items in the order.
+             * If there's a global discount added as an order item,
+             * the discount will include an additional discount from the coupon. 
+             * This gets the global discount plus the coupon discount. Then adds its taxes.
+             */
+            $mnt_descuento = $item->get_total() + ($is_exe ? 0 : $item->get_total_tax());
+
             $dcto = [
                 "NroLinDR" => $idsto,
                 "TpoMov" => "D",
                 "TpoValor" => "$",
-                "ValorDR" => strval($MontoItem * -1)
+                "ValorDR" => round($mnt_descuento * -1)
             ];
 
             /**
@@ -1446,7 +1449,6 @@ function create_json_openfactura($order, $openfactura_registry){
     foreach ($order->get_items('shipping') as $item_id => $shipping_item) {
         /**
          * Get shipping amount and price. Assign as free should the shipping be free.
-         * I did not code this.
          */
         if ($shipping_item->get_total() == 0) {
             $monto_item = 0;
