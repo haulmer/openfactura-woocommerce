@@ -6,7 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## V1.0.26_alpha.4 2023-07-28
 ### Fix
-- Fixed global discount's net not being added to net totals.
+- Fixes global discount's net not being added to net totals.
+- Fixes discounts wrongly marked as tax free.
+- Disallows tax free discounts when there's no tax free items
+- Removes decimals from PrcItem in document.
 
 ## Unreleased
 ## V1.0.26_alpha.3 2023-07-28

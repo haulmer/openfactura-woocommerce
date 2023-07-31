@@ -1211,7 +1211,7 @@ function create_json_openfactura($order, $openfactura_registry){
                     'NmbItem' => substr($name_product, 0, 80),
                     'DscItem' => substr($description_product, 0, 990),
                     'QtyItem' => $item->get_quantity(),
-                    'PrcItem' => round($PrcItem, 4),
+                    'PrcItem' => round($PrcItem, 0),
                     'MontoItem' => round($MontoItem - $descuento, 0),
                     'IndExe' => 1
                 ];
@@ -1220,7 +1220,7 @@ function create_json_openfactura($order, $openfactura_registry){
                     "NroLinDet" => $i,
                     'NmbItem' => substr($name_product, 0, 80),
                     'QtyItem' => $item->get_quantity(),
-                    'PrcItem' => round($PrcItem, 4),
+                    'PrcItem' => round($PrcItem, 0),
                     'MontoItem' => round($MontoItem - $descuento, 0),
                     'IndExe' => 1
                 ];
@@ -1260,7 +1260,7 @@ function create_json_openfactura($order, $openfactura_registry){
                     'NmbItem' => substr($name_product, 0, 80),
                     'DscItem' => substr($description_product, 0, 990),
                     'QtyItem' => $item->get_quantity(),
-                    'PrcItem' => round($PrcItem, 4),
+                    'PrcItem' => round($PrcItem, 0),
                     'MontoItem' => round($MontoItem - $descuento, 0)
                 ];
             } else {
@@ -1268,7 +1268,7 @@ function create_json_openfactura($order, $openfactura_registry){
                     "NroLinDet" => $i,
                     'NmbItem' => substr($name_product, 0, 80),
                     'QtyItem' => $item->get_quantity(),
-                    'PrcItem' => round($PrcItem, 4),
+                    'PrcItem' => round($PrcItem, 0),
                     'MontoItem' => round($MontoItem - $descuento, 0)
                 ];
             }
@@ -1557,6 +1557,16 @@ function create_json_openfactura($order, $openfactura_registry){
      */
     if (intval($order->get_total()) < 10) {
         $note = "No se permiten emisiones con un valor menor a 10 CLP.";
+        $order->add_order_note($note);
+        return $order;
+    }
+
+    /**
+     * If there's a tax free discount and there's no tax free items, return a note to the order.
+     */
+    if (intval($mnt_exe) < 0) {
+        $note = "No se permiten descuentos exentos en boletas afectas." . "\n" .
+                "Reintente con un descuento afecto.";
         $order->add_order_note($note);
         return $order;
     }
