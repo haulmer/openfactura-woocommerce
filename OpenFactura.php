@@ -1028,13 +1028,13 @@ function so_payment_complete($order_id)
 /**
  * Create a new document to issue. This functions does the following:
  * - Iterates the order's items, fees and shipping.
- * - Returns the order and adds a error note to the order 
- *   if the net amount is < 10 CLP or tax free discounts are < 0.
+ * - If the net amount is < 10 CLP or tax free discounts are < 0
+ *   returns the order and adds a error note.
  * - Gets the customer data.
  * - Gets the order's hyperlink and custom logo.
  * - Gets the plugin configuration for the document.
- * - Prepares the document headers
- * - Creates the document to send.
+ * - Prepares the document headers.
+ * - Creates the document to issue.
  * - Sends the document to backend issue service.
  * - Handles the response and shows it as order notes.
  * - Returns the order.
@@ -1240,10 +1240,10 @@ function create_json_openfactura($order, $openfactura_registry){
         /**
          * Get fee's data.
          */
-        $fee_total_tax = $item_fee->get_total_tax();
+        $fee_total_tax = round($item_fee->get_total_tax());
         $fee_name = $item_fee->get_name();
-        $fee_amount = round($item_fee->get_amount());
         $fee_total = round($item_fee->get_total());
+        $fee_net_mnt = $fee_total + $fee_total_tax;
 
         /**
          * If fee doesn't have a name assign a default one.
@@ -1268,7 +1268,7 @@ function create_json_openfactura($order, $openfactura_registry){
                 "NroLinDet" => $i,
                 'NmbItem' => substr($fee_name, 0, 80),
                 'QtyItem' => 1, 
-                'PrcItem' => $fee_amount,
+                'PrcItem' => $fee_total,
                 'MontoItem' => $fee_total,
                 'IndExe' => 1
             ];
@@ -1290,7 +1290,7 @@ function create_json_openfactura($order, $openfactura_registry){
             /**
              * Add fee amount to net amount counter.
              */
-            $mnt_neto += $fee_total;
+            $mnt_neto += $fee_net_mnt;
 
             /**
              * Create fee map for issue request.
@@ -1299,8 +1299,8 @@ function create_json_openfactura($order, $openfactura_registry){
                 "NroLinDet" => $i,
                 'NmbItem' => substr($fee_name, 0, 80),
                 'QtyItem' => 1,
-                'PrcItem' => $fee_amount,
-                'MontoItem' => $fee_total
+                'PrcItem' => $fee_net_mnt,
+                'MontoItem' => $fee_net_mnt
             ];
         }
         /**
@@ -1322,7 +1322,7 @@ function create_json_openfactura($order, $openfactura_registry){
                 "NroLinDR" => $idsto,
                 "TpoMov" => "D",
                 "TpoValor" => "$",
-                "ValorDR" => strval($fee_total * -1)
+                "ValorDR" => strval($fee_net_mnt * -1)
             ];
 
             /**
@@ -1368,7 +1368,7 @@ function create_json_openfactura($order, $openfactura_registry){
             /**
              * Add shipping amount to tax free amount counter.
              */
-            $mnt_exe = $mnt_exe + $monto_item;
+            $mnt_exe += round($monto_item);
 
             /**
              * Create an items map for the shipping item.
