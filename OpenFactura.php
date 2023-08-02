@@ -1343,15 +1343,10 @@ function create_json_openfactura($order, $openfactura_registry){
      */
     foreach ($order->get_items('shipping') as $item_id => $shipping_item) {
         /**
-         * Get shipping amount and price. Assign as free should the shipping be free.
+         * Get shipping amount and price. Assign item price as 1 should the shipping be free.
          */
-        if ($shipping_item->get_total() == 0) {
-            $monto_item = 0;
-            $prc_item = 1;
-        } else {
-            $monto_item = round($shipping_item->get_total());
-            $prc_item = round($shipping_item->get_total());
-        }
+        $monto_item = round($shipping_item->get_total() + $shipping_item->get_total_tax());
+        $prc_item = $monto_item == 0 ? 1 : $monto_item;
 
         /**
          * Get shipping item's name. Assign a default name if it doesn't have one.
@@ -1368,7 +1363,7 @@ function create_json_openfactura($order, $openfactura_registry){
             /**
              * Add shipping amount to tax free amount counter.
              */
-            $mnt_exe += round($monto_item);
+            $mnt_exe += $monto_item;
 
             /**
              * Create an items map for the shipping item.
@@ -1377,8 +1372,8 @@ function create_json_openfactura($order, $openfactura_registry){
                 "NroLinDet" => $i,
                 'NmbItem' => substr($shipping_item->get_name(), 0, 80),
                 'QtyItem' => 1,
-                'PrcItem' => round($prc_item, 4),
-                'MontoItem' => round($monto_item),
+                'PrcItem' => $prc_item,
+                'MontoItem' => $monto_item,
                 'IndExe' => 1
             ];
         /**
@@ -1398,7 +1393,7 @@ function create_json_openfactura($order, $openfactura_registry){
             /**
              * Add shipping amount to net amount counter.
              */
-            $mnt_neto += round($monto_item);
+            $mnt_neto += $monto_item;
 
             /**
              * Create an items map for the shipping item.
@@ -1407,8 +1402,8 @@ function create_json_openfactura($order, $openfactura_registry){
                 "NroLinDet" => $i,
                 'NmbItem' => substr($shipping_item->get_name(), 0, 80),
                 'QtyItem' => 1,
-                'PrcItem' => round($prc_item, 6),
-                'MontoItem' => round($monto_item)
+                'PrcItem' => $prc_item,
+                'MontoItem' => $monto_item
             ];
         }
 
@@ -1457,10 +1452,10 @@ function create_json_openfactura($order, $openfactura_registry){
     }
 
     /**
-     * If there's a tax free discount and there's no tax free items, return a note to the order.
+     * If the tax free discount is greater than tax free net amount, return a note to the order.
      */
     if (intval($mnt_exe) < 0) {
-        $note = "No se permiten descuentos exentos en boletas afectas." . "\n" .
+        $note = "No se permiten descuentos exentos que superen montos exentos." . "\n" .
                 "Reintente con un descuento afecto.";
         $order->add_order_note($note);
         return $order;
@@ -1495,7 +1490,7 @@ function create_json_openfactura($order, $openfactura_registry){
         ]
     ];
     
-    if (!empty($openfactura_registry->link_logo) && $openfactura_registry->show_logo) {
+    if ($openfactura_registry->show_logo && !empty($openfactura_registry->link_logo)) {
         $customize_page["customizePage"]["urlLogo"] = $openfactura_registry->link_logo;
     }
 
