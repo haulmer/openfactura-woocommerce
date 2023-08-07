@@ -443,9 +443,12 @@ const styledSelects = {
 };
 
 const activateProgress = (el, isActive) => {
-    isActive ?
+    /*isActive ?
         el.classList.remove('progressBar--active') :
-        el.classList.add('progressBar--active');
+        el.classList.add('progressBar--active');*/
+    isActive ? 
+        jQuery('.progressBar').removeClass("progressBar--active") :
+        jQuery('.progressBar').addClass("progressBar--active");
 };
 
 window.addEventListener('load', () => {
@@ -468,16 +471,17 @@ window.addEventListener('load', () => {
 });
 
 const sendForm = () => {
+    let demoApikey = jQuery("#apikey-data-container").data("apikey");
+
     const form = document.getElementById('form1');
     const progressBar = form.getElementsByClassName('progressBar')[0];
 	const allow33 = Boolean(form.elements['allow33'].checked);
     const automatic39 = Boolean(form.elements['automatic39'].checked);
     const description = Boolean(form.elements['product-description'].checked);
-    const emailLinkSelfservice = Boolean(form.elements['email-link-selfservice'].checked);
 	const enableLogo = Boolean(form.elements['enableLogo'].checked);
 	const demo = Boolean(form.elements['demo'].checked);
 	const urlLogo = form.elements['logo-url'].value;
-	const apikey = form.elements['apikey'].value;
+	const apikey = demo ? demoApikey : form.elements['apikey'].value;
 	const sucursal = form.elements['sucursal'].value;
 	const actividad = form.elements['actividad'].value;
     // init progress bar
@@ -498,7 +502,6 @@ const sendForm = () => {
 				sucursal: sucursal,
                 actividad: actividad,
                 description: description,
-                emailLinkSelfservice:emailLinkSelfservice
 			}
 
 			if (!String(urlLogo).includes('http:')) {
@@ -529,6 +532,7 @@ const sendForm = () => {
                             });
                             activateProgress(progressBar, true);
 							toggleFormDisabled(form, true);
+                            setTimeout(() => location.reload(), 1000);
 							return true;
 						}
 						if(res['data']=='error'){
@@ -615,6 +619,7 @@ jQuery('#update-button').click(event => {
 				return false;
 			}
             if(res['data']=='refresh'){
+                console.log(res);
                 Snackbar.show({
                     text: 'Datos actualizados correctamente, favor actualice la página',
                     showAction: false,
@@ -623,6 +628,7 @@ jQuery('#update-button').click(event => {
                 });
                 activateProgress(progressBar, true);
                 toggleFormDisabled(form, true);
+                setTimeout(() => location.reload(), 1000);
                 return true;
             }
             if(res['data']=='insert'){
@@ -672,8 +678,31 @@ jQuery(document).ready(function () {
     });
 });
 
-jQuery(document).ready(function() { 
-	jQuery(".mark-as-read").click(function () {
+jQuery(() => {
+    let demoCheckbox = jQuery("#check0");
+    let apikeyField = jQuery("#apikey");
+    let apikeyContainer = jQuery("#apikey-container");
 
-	 });
- });
+    let applyApikeyFieldStyle = () => {
+        let isChecked = demoCheckbox.is(":checked");
+        apikeyField.prop("disabled", isChecked);
+        
+        if (isChecked) {
+            if (apikeyField.val()) {
+                apikeyContainer.removeClass("form-field--is-filled");
+                apikeyField.css({'color': 'rgba(0,0,0,0)', 'transition':'.1s'});
+            }
+            apikeyContainer.addClass("form-field--is-disabled");
+        } else {
+            if (apikeyField.val()) {
+                apikeyContainer.addClass("form-field--is-filled");
+                apikeyField.css({'color': 'inherit'});
+            }
+            apikeyContainer.removeClass("form-field--is-disabled");        
+        }
+
+    };
+    
+    applyApikeyFieldStyle();
+    demoCheckbox.on("change", applyApikeyFieldStyle);
+});

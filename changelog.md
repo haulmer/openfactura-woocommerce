@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## ## V1.0.26_beta.2 2023-08-03
+## Changed
+- Refactors in admin view.
+- Behavior of Api key form now reflects demo use.
+
+## Unreleased
 ## V1.0.26_beta.1 2023-07-28
 ### Fix
 - Includes item's tax in the item net amount toal to avoid rouding precision errors.

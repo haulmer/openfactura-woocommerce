@@ -682,11 +682,23 @@ function sub_menu_option_openfactura()
 {
     enqueue_styles();
     enqueue_scripts();
-    global $wpdb;
+
+    /**
+     * Beware: the key '928e15a2d14d4a6292345f04960f4bd3' is also on ./js/main.js
+     * This is a public demo key, so it shouldn't be a problem.
+     */
     $apikey = '928e15a2d14d4a6292345f04960f4bd3';
+
+    global $wpdb;
     $openfactura_registry = $wpdb->get_results("SELECT * FROM  " . $wpdb->prefix . "openfactura_registry where is_active=1");
-?>
+    $form_isdemo = !empty($openfactura_registry) && $openfactura_registry[0]->is_demo;
+
+    ?>
     <div class="of-whmcs">
+        <div
+            id="apikey-data-container"
+            data-apikey=<?php echo $apikey ?>
+        ></div>
         <div class="wrapper">
             <div class="wrapper_content">
                 <h1>Configuración</h1>
@@ -700,40 +712,61 @@ function sub_menu_option_openfactura()
             </div>
             <form action="" onsubmit="return sendForm(event)" id="form1" method="post">
                 <section>
+                    <div class="progressBar">
+                        <div class="indeterminate"></div>
+                    </div>
                     <h2>Opciones generales</h2>
-
-
                     <div class="s-row">
-                        <div class="col-4">
+                        <div class="col-6">
                             <div>
-                                <div class="form-field">
+                                <div class="form-field" id="apikey-container">
                                     <div class="form-field__control">
                                         <label for="apikey" class="form-field__label">API Key</label>
-                                        <input id="apikey" name="apikey" type="text t" class="form-field__input" value="<?php if (!empty($openfactura_registry)) {
-                                                                                                                            echo $openfactura_registry[0]->apikey;
-                                                                                                                        } ?> ">
+                                        <input 
+                                            id="apikey" 
+                                            name="apikey" 
+                                            type="text t" 
+                                            class="form-field__input" 
+                                            value="<?php 
+                                                if (!empty($openfactura_registry)) {
+                                                    echo $form_isdemo ? $apikey : $openfactura_registry[0]->apikey;
+                                                } ?>"
+                                            <?php
+                                                if($form_isdemo) {
+                                                    ?> disabled <?php
+                                                }
+                                            ?>
+                                        />
                                     </div>
                                     <div class="form-field__hint">
                                         Ingresa tu API Key para para utilizar tus datos almacenados en OpenFactura.
+                                        <a class="get-apikey" href="https://www.openfactura.cl/">¿Dónde obtengo mi API Key?</a>
                                     </div>
                                 </div>
                             </div>
 
                         </div>
-                        <div class="col-4">
-                            <div class="form-apikey" id='get-apikey'>
-                                <a class="get-apikey" href="https://www.openfactura.cl/">¿Dónde obtengo mi API Key?</a>
+                        <div class="col-2">
+                            <div class="wrapper_content">
+                                <button type="submit" class="button-primary">Guardar</button>
                             </div>
                         </div>
                     </div>
 
                     <div class="checkBoxContainer">
                         <div class="container">
-                            <input type="checkbox" id="check0" name="demo" value=<?php if (!empty($openfactura_registry)) {
-                                                                                        echo $openfactura_registry[0]->is_demo;
-                                                                                        if ($openfactura_registry[0]->is_demo == 1) { ?> checked <?php
-                                                                                                                                                }
-                                                                                                                                            } ?> />
+                            <input 
+                                type="checkbox" 
+                                id="check0" 
+                                name="demo" 
+                                value=<?php 
+                                    if (!empty($openfactura_registry)) {
+                                        echo $openfactura_registry[0]->is_demo;
+                                        if ($openfactura_registry[0]->is_demo == 1) {
+                                             ?> checked <?php
+                                        }
+                                    } ?> 
+                                />
                             <label for="check0" class="md-checkbox"></label>
                         </div>
 
@@ -747,11 +780,18 @@ function sub_menu_option_openfactura()
 
                     <div class="checkBoxContainer">
                         <div class="container">
-                            <input type="checkbox" id="check1" name="automatic39" value=<?php if (!empty($openfactura_registry)) {
-                                                                                            echo $openfactura_registry[0]->generate_boleta;
-                                                                                            if ($openfactura_registry[0]->generate_boleta == 1) { ?> checked <?php
-                                                                                                                                                            }
-                                                                                                                                                        } ?> />
+                            <input 
+                                type="checkbox" 
+                                id="check1" 
+                                name="automatic39" 
+                                value=<?php 
+                                    if (!empty($openfactura_registry)) {
+                                        echo $openfactura_registry[0]->generate_boleta;
+                                        if ($openfactura_registry[0]->generate_boleta == 1) { 
+                                            ?> checked <?php
+                                        }
+                                    } ?> 
+                            />
                             <label for="check1" class="md-checkbox"></label>
                         </div>
 
@@ -766,11 +806,18 @@ function sub_menu_option_openfactura()
 
                     <div class="checkBoxContainer">
                         <div class="container">
-                            <input type="checkbox" id="check2" name="allow33" value=<?php if (!empty($openfactura_registry)) {
-                                                                                        echo $openfactura_registry[0]->allow_factura;
-                                                                                        if ($openfactura_registry[0]->allow_factura == 1) { ?> checked <?php
-                                                                                                                                                    }
-                                                                                                                                                } ?> />
+                            <input 
+                                type="checkbox" 
+                                id="check2" 
+                                name="allow33" 
+                                value=<?php 
+                                    if (!empty($openfactura_registry)) {
+                                        echo $openfactura_registry[0]->allow_factura;
+                                        if ($openfactura_registry[0]->allow_factura == 1) {
+                                             ?> checked <?php
+                                        }
+                                    } ?>
+                            />
                             <label for="check2" class="md-checkbox"></label>
                         </div>
 
@@ -787,11 +834,18 @@ function sub_menu_option_openfactura()
 
                     <div class="checkBoxContainer">
                         <div class="container">
-                            <input type="checkbox" id="check5" name="product-description" value=<?php if (!empty($openfactura_registry)) {
-                                                                                                    echo $openfactura_registry[0]->is_description;
-                                                                                                    if ($openfactura_registry[0]->is_description == 1) { ?> checked <?php
-                                                                                                                                                                }
-                                                                                                                                                            } ?> />
+                            <input 
+                                type="checkbox" 
+                                id="check5"
+                                name="product-description" 
+                                value=<?php 
+                                    if (!empty($openfactura_registry)) {
+                                        echo $openfactura_registry[0]->is_description;
+                                        if ($openfactura_registry[0]->is_description == 1) {
+                                             ?> checked <?php
+                                        }
+                                    } ?> 
+                            />
                             <label for="check5" class="md-checkbox"></label>
                         </div>
 
@@ -805,29 +859,17 @@ function sub_menu_option_openfactura()
 
                     <div class="checkBoxContainer">
                         <div class="container">
-                            <input type="checkbox" id="check6" name="email-link-selfservice" value=<?php if (!empty($openfactura_registry)) {
-                                                                                                        echo $openfactura_registry[0]->is_email_link_selfservice;
-                                                                                                        if ($openfactura_registry[0]->is_email_link_selfservice == 1) { ?> checked <?php
-                                                                                                                                                                                }
-                                                                                                                                                                            } ?> />
-                            <label for="check6" class="md-checkbox"></label>
-                        </div>
-
-                        <div>
-                            <label for="check6" class="checkLabel">Insertar en el correo de “Pedido Completado” el enlace de los documentos</label>
-                            <div>
-                                Al seleccionar esta opción, se incorporará en el correo que tiene por asunto “Pedido completado” el link desde donde el cliente podrá visualizar o emitir la boleta o factura. Aun cuando se desactive esta opción Haulmer enviará un correo con el link respectivo.
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="checkBoxContainer">
-                        <div class="container">
-                            <input type="checkbox" id="check3" name="enableLogo" value=<?php if (!empty($openfactura_registry)) {
-                                                                                            echo $openfactura_registry[0]->show_logo;
-                                                                                            if ($openfactura_registry[0]->show_logo == 1) { ?> checked <?php
-                                                                                                                                                    }
-                                                                                                                                                } ?> />
+                            <input 
+                                type="checkbox" 
+                                id="check3" 
+                                name="enableLogo" 
+                                value=<?php if (!empty($openfactura_registry)) {
+                                    echo $openfactura_registry[0]->show_logo;
+                                    if ($openfactura_registry[0]->show_logo == 1) { 
+                                        ?> checked <?php
+                                    }
+                                } ?> 
+                            />
                             <label for="check3" class="md-checkbox"></label>
                         </div>
 
@@ -842,9 +884,16 @@ function sub_menu_option_openfactura()
                             <div class="form-field">
                                 <div class="form-field__control">
                                     <label for="logo-url" class="form-field__label">URL logo empresa</label>
-                                    <input id="logo-url" name="logo-url" type="text t" class="form-field__input" value="<?php if (!empty($openfactura_registry)) {
-                                                                                                                            echo $openfactura_registry[0]->link_logo;
-                                                                                                                        } ?> ">
+                                    <input 
+                                        id="logo-url" 
+                                        name="logo-url" 
+                                        type="text t" 
+                                        class="form-field__input" 
+                                        value="<?php 
+                                            if (!empty($openfactura_registry)) {
+                                                echo $openfactura_registry[0]->link_logo;
+                                            } ?>"
+                                    />
                                 </div>
                                 <div class="form-field__hint">
                                     No se mostrará el logotipo si la URL no es https. Proporciones 16:9, Dimensiones ideales de 128 X 72px.
@@ -874,9 +923,16 @@ function sub_menu_option_openfactura()
                             <div class="form-field">
                                 <div class="form-field__control">
                                     <label for="rut" class="form-field__label">RUT</label>
-                                    <input id="rut" type="tex t" class="form-field__input" value="<?php if (!empty($openfactura_registry)) {
-                                                                                                        echo $openfactura_registry[0]->rut;
-                                                                                                    } ?>" disabled>
+                                    <input 
+                                        id="rut" 
+                                        type="tex t" 
+                                        class="form-field__input" 
+                                        value="<?php 
+                                            if (!empty($openfactura_registry)) {
+                                            echo $openfactura_registry[0]->rut;
+                                        } ?>" 
+                                        disabled
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -884,10 +940,16 @@ function sub_menu_option_openfactura()
                             <div class="form-field">
                                 <div class="form-field__control">
                                     <label for="company-name" class="form-field__label">Razón Social</label>
-                                    <input id="company-name" type="text t" class="form-field__input" value="<?php
-                                                                                                            if (!empty($openfactura_registry)) {
-                                                                                                                echo $openfactura_registry[0]->razon_social;
-                                                                                                            } ?>" disabled>
+                                    <input 
+                                        id="company-name" 
+                                        type="text t" 
+                                        class="form-field__input" 
+                                        value="<?php
+                                            if (!empty($openfactura_registry)) {
+                                                echo $openfactura_registry[0]->razon_social;
+                                            } ?>"
+                                        disabled
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -895,10 +957,16 @@ function sub_menu_option_openfactura()
                             <div class="form-field">
                                 <div class="form-field__control">
                                     <label for="description" class="form-field__label">Glosa descriptiva (Ex Giro)</label>
-                                    <input id="description" type="text t" class="form-field__input" value="<?php
-                                                                                                            if (!empty($openfactura_registry)) {
-                                                                                                                echo $openfactura_registry[0]->glosa_descriptiva;
-                                                                                                            } ?>" disabled>
+                                    <input 
+                                        id="description" 
+                                        type="text t" 
+                                        class="form-field__input" 
+                                        value="<?php
+                                            if (!empty($openfactura_registry)) {
+                                                echo $openfactura_registry[0]->glosa_descriptiva;
+                                            } ?>"
+                                        disabled
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -967,11 +1035,7 @@ function sub_menu_option_openfactura()
                         </div>
                     </div>
 
-                </section>
-
-                <div class="wrapper_content">
-                    <button type="submit" class="button-primary">Guardar</button>
-                </div>
+                </section> 
             </form>
         </div>
     </div>
