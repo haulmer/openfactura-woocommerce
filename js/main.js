@@ -490,98 +490,97 @@ const sendForm = () => {
 
     // emulating form's response
     setTimeout(() => {
-        if(apikey != ""){
-            const data = {
-				action: 'save-data-openfactura-ajax',
-				demo:demo,
-				apikey:apikey.replace(' ',''),
-				allow33: allow33,
-				automatic39: automatic39,
-				enableLogo: enableLogo,
-				urlLogo: urlLogo.replace(' ',''),
-				sucursal: sucursal,
-                actividad: actividad,
-                description: description,
-			}
-
-			if (!String(urlLogo).includes('http:')) {
-				jQuery.ajax({
-					url:main_vars.ajaxurl,
-					type:'post',
-					data:data,
-					success:function(res) {
-						activateProgress(progressBar, true);
-						toggleFormDisabled(form, true);
-						if(res['data']=='insert'){
-                            Snackbar.show({
-                                text: 'Datos guardados correctamente',
-                                showAction: false,
-                                width: '360px',
-                                backgroundColor: 'rgba(0, 0, 0, .87)'
-                            });
-                            activateProgress(progressBar, true);
-							toggleFormDisabled(form, true);
-							return true;
-						}
-                        if(res['data']=='refresh'){
-                            Snackbar.show({
-                                text: 'Datos guardados correctamente, favor actualice la página',
-                                showAction: false,
-                                width: '420px',
-                                backgroundColor: 'rgba(0, 0, 0, .87)'
-                            });
-                            activateProgress(progressBar, true);
-							toggleFormDisabled(form, true);
-                            setTimeout(() => location.reload(), 1000);
-							return true;
-						}
-						if(res['data']=='error'){
-							Snackbar.show({
-								text: 'Error al guardar los datos del contribuyente',
-								showAction: false,
-								width: '360px',
-								backgroundColor: 'rgba(0, 0, 0, .87)'
-							});
-							activateProgress(progressBar, true);
-							toggleFormDisabled(form, true);
-							return false;
-						}
-						return true;
-					},
-					error: function(res){
-						Snackbar.show({
-							text: 'Error al guardar los datos del contribuyente',
-							showAction: false,
-							width: '360px',
-							backgroundColor: 'rgba(0, 0, 0, .87)'
-						});
-						activateProgress(progressBar, true);
-						toggleFormDisabled(form, true);
-						return false;
-					}
-				});
-			} else {
-				activateProgress(progressBar, true);
-				toggleFormDisabled(form, true);
-				jQuery('#logourl').val('');
-				Snackbar.show({
-					text: 'Error en la URL del logo, debe utilizar protocolo HTTPS',
-					showAction: false,
-					width: '360px',
-					backgroundColor: 'rgba(0, 0, 0, .87)'});
-				return false;
-			}
-        }
-        else{
+        if(!apikey) {
             activateProgress(progressBar, true);
             toggleFormDisabled(form, true);
             Snackbar.show({
-                text: 'El campo "Api Key" no puede quedar vacío."',
+                text: 'El campo "API Key" no puede quedar vacío."',
                 showAction: false,
                 width: '360px',
                 backgroundColor: 'rgba(0, 0, 0, .87)'});
             return false;
         }
+
+        if(enableLogo && !String(urlLogo).includes('https://')) {
+            activateProgress(progressBar, true);
+            toggleFormDisabled(form, true);
+            jQuery('#logourl').val('');
+            Snackbar.show({
+                text: 'Error en la URL del logo, debe utilizar protocolo HTTPS',
+                showAction: false,
+                width: '360px',
+                backgroundColor: 'rgba(0, 0, 0, .87)'});
+            return false;
+        }
+
+        const data = {
+            action: 'save-data-openfactura-ajax',
+            demo:demo,
+            apikey:apikey.replace(' ',''),
+            allow33: allow33,
+            automatic39: automatic39,
+            enableLogo: enableLogo,
+            urlLogo: urlLogo.replace(' ',''),
+            sucursal: sucursal,
+            actividad: actividad,
+            description: description,
+        }
+
+        jQuery.ajax({
+            url:main_vars.ajaxurl,
+            type:'post',
+            data:data,
+            success:function(res) {
+                activateProgress(progressBar, true);
+                toggleFormDisabled(form, true);
+                if(res['data']=='insert'){
+                    Snackbar.show({
+                        text: 'Datos guardados correctamente.',
+                        showAction: false,
+                        width: '360px',
+                        backgroundColor: 'rgba(0, 0, 0, .87)'
+                    });
+                    activateProgress(progressBar, true);
+                    toggleFormDisabled(form, true);
+                    return true;
+                }
+                if(res['data']=='refresh'){
+                    Snackbar.show({
+                        text: 'Datos guardados correctamente. Por favor actualice la página.',
+                        showAction: false,
+                        width: '420px',
+                        backgroundColor: 'rgba(0, 0, 0, .87)'
+                    });
+                    activateProgress(progressBar, true);
+                    toggleFormDisabled(form, true);
+                    setTimeout(() => location.reload(), 1000);
+                    return true;
+                }
+                if(res['data']=='error'){
+                    Snackbar.show({
+                        text: 'Error al guardar los datos del contribuyente. Si ha cambiado de API Key revise que esté correcta.',
+                        showAction: false,
+                        width: '360px',
+                        backgroundColor: 'rgba(0, 0, 0, .87)'
+                    });
+                    activateProgress(progressBar, true);
+                    toggleFormDisabled(form, true);
+                    return false;
+                }
+                return true;
+            },
+            error: function(res){
+                Snackbar.show({
+                    text: 'Error al guardar los datos del contribuyente. No se ha obtenido respueesta del servicio.',
+                    showAction: false,
+                    width: '360px',
+                    backgroundColor: 'rgba(0, 0, 0, .87)'
+                });
+                activateProgress(progressBar, true);
+                toggleFormDisabled(form, true);
+                return false;
+            }
+        });
 			
     }, 0);
 
@@ -609,7 +608,7 @@ jQuery('#update-button').click(event => {
 		success:function(res) {
             if(res['data']=='error'){
 				Snackbar.show({
-					text: 'Error al actualizar los datos del contribuyente',
+					text: 'Error al actualizar los datos del contribuyente.',
 					showAction: false,
 					width: '360px',
 					backgroundColor: 'rgba(0, 0, 0, .87)'
@@ -621,7 +620,7 @@ jQuery('#update-button').click(event => {
             if(res['data']=='refresh'){
                 console.log(res);
                 Snackbar.show({
-                    text: 'Datos actualizados correctamente, favor actualice la página',
+                    text: 'Datos actualizados correctamente. Por favor actualice la página.',
                     showAction: false,
                     width: '420px',
                     backgroundColor: 'rgba(0, 0, 0, .87)'
@@ -633,7 +632,7 @@ jQuery('#update-button').click(event => {
             }
             if(res['data']=='insert'){
 				Snackbar.show({
-                    text: 'Datos actualizados correctamente',
+                    text: 'Datos actualizados correctamente.',
                     showAction: false,
                     width: '360px',
                     backgroundColor: 'rgba(0, 0, 0, .87)'
@@ -645,7 +644,7 @@ jQuery('#update-button').click(event => {
 		},
 		error: function(res){
 			Snackbar.show({
-				text: 'Error al actualizar los datos del contribuyente',
+				text: 'Error al actualizar los datos del contribuyente. Reintente nuevamente.',
 				showAction: false,
 				width: '360px',
 				backgroundColor: 'rgba(0, 0, 0, .87)'
@@ -705,4 +704,17 @@ jQuery(() => {
     
     applyApikeyFieldStyle();
     demoCheckbox.on("change", applyApikeyFieldStyle);
+});
+
+jQuery(() => {
+    let formFields = jQuery(":input");
+    formFields.on("change", () => {
+        Snackbar.show({
+            text: 'Tiene cambios sin guardar. Haga click en guardar para mantener los cambios.',
+            showAction: false,
+            width: '360px',
+            duration: false,
+            backgroundColor: 'rgba(0, 0, 0, .87)'
+        });
+    })
 });

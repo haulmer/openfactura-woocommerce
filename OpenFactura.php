@@ -684,7 +684,6 @@ function sub_menu_option_openfactura()
     enqueue_scripts();
 
     /**
-     * Beware: the key '928e15a2d14d4a6292345f04960f4bd3' is also on ./js/main.js
      * This is a public demo key, so it shouldn't be a problem.
      */
     $apikey = '928e15a2d14d4a6292345f04960f4bd3';
@@ -912,7 +911,7 @@ function sub_menu_option_openfactura()
                     </div>
                     <p>
                         Los siguientes campos se obtienen desde el SII, a través de
-                        OpenFactura, y no pueden ser modificados desde acá. Si cuentas con
+                        OpenFactura y no pueden ser modificados aquí. Si cuentas con
                         sucursales, puedes seleccionar la que desees ocupar. Si has realizado
                         cambios en el SII, recuerda hacer clic en 'Actualizar' para que se
                         vean reflejados.
