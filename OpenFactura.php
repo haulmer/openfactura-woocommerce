@@ -698,6 +698,10 @@ function sub_menu_option_openfactura()
             id="apikey-data-container"
             data-apikey=<?php echo $apikey ?>
         ></div>
+        <div
+            id="example-image-data-container"
+            data-example-image=<?php echo plugin_dir_url(__FILE__) . "img/preview.svg" ?>
+        ></div>
         <div class="wrapper">
             <div class="wrapper_content">
                 <h1>Configuración</h1>

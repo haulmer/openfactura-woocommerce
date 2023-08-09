@@ -658,9 +658,10 @@ jQuery('#update-button').click(event => {
 
 jQuery(document).ready(function () {
     jQuery(document).on('click', '._openDialog-preview', () => {
+        let exampleImageUrl = jQuery("#example-image-data-container").data("example-image");
         jQuery.confirm({
 			title: 'Logotipo personalizado',
-            content: '<div>Vista previa</div> <img class="img-preview" alt="Ver ejemplo" src= "'+myScript.pluginsUrl + '/woocommerce-openfactura/img/preview.svg"/>',
+            content: '<div>Vista previa</div> <img class="img-preview" alt="Ver ejemplo" src= "'+ exampleImageUrl + '"/>',
             boxWidth: '640px',
             useBootstrap: false,
             backgroundDismiss: true,
