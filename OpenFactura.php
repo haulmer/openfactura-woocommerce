@@ -153,7 +153,7 @@ add_action('wp_ajax_nopriv_save-data-openfactura-ajax', 'save_data_openfactura_r
  * Save the new information about the plugin like the ApiKey and the permissions for the emission of bills and invoices.
  */
 function save_data_openfactura_registry(){
-    writeLogs("entra aca para actualizar 2");
+    //writeLogs("entra aca para actualizar 2");
     #   ╔═════════════════════════════╗
     #   ║   Check the checkbox info   ║
     #   ╚═════════════════════════════╝
@@ -250,8 +250,8 @@ function save_data_openfactura_registry(){
                 $data_act = explode("|",$actividad_economica_active);
                 $actividad = $data_act[0];
                 $codigo_actividad = $data_act[1];
-                writeLogs("demo");
-                writeLogs($demo);
+                //writeLogs("demo");
+                //writeLogs($demo);
                 $wpdb->update($wpdb->prefix . 'openfactura_registry',
                     array(
                         'is_demo' => $demo,
@@ -441,7 +441,7 @@ function update_data_openfactura_registry(){
             return wp_send_json_success(['error']);
         }
         $response = json_decode($response, true);
-        writeLogs($response);
+        //writeLogs($response);
 
         #   ╔═════════════════════════╗
         #   ║ Get the activities info ║
@@ -682,11 +682,26 @@ function sub_menu_option_openfactura()
 {
     enqueue_styles();
     enqueue_scripts();
-    global $wpdb;
+
+    /**
+     * This is a public demo key, so it shouldn't be a problem.
+     */
     $apikey = '928e15a2d14d4a6292345f04960f4bd3';
+
+    global $wpdb;
     $openfactura_registry = $wpdb->get_results("SELECT * FROM  " . $wpdb->prefix . "openfactura_registry where is_active=1");
-?>
+    $form_isdemo = !empty($openfactura_registry) && $openfactura_registry[0]->is_demo;
+
+    ?>
     <div class="of-whmcs">
+        <div
+            id="apikey-data-container"
+            data-apikey=<?php echo $apikey ?>
+        ></div>
+        <div
+            id="example-image-data-container"
+            data-example-image=<?php echo plugin_dir_url(__FILE__) . "img/preview.svg" ?>
+        ></div>
         <div class="wrapper">
             <div class="wrapper_content">
                 <h1>Configuración</h1>
@@ -700,40 +715,61 @@ function sub_menu_option_openfactura()
             </div>
             <form action="" onsubmit="return sendForm(event)" id="form1" method="post">
                 <section>
+                    <div class="progressBar">
+                        <div class="indeterminate"></div>
+                    </div>
                     <h2>Opciones generales</h2>
-
-
                     <div class="s-row">
-                        <div class="col-4">
+                        <div class="col-6">
                             <div>
-                                <div class="form-field">
+                                <div class="form-field" id="apikey-container">
                                     <div class="form-field__control">
                                         <label for="apikey" class="form-field__label">API Key</label>
-                                        <input id="apikey" name="apikey" type="text t" class="form-field__input" value="<?php if (!empty($openfactura_registry)) {
-                                                                                                                            echo $openfactura_registry[0]->apikey;
-                                                                                                                        } ?> ">
+                                        <input 
+                                            id="apikey" 
+                                            name="apikey" 
+                                            type="text t" 
+                                            class="form-field__input" 
+                                            value="<?php 
+                                                if (!empty($openfactura_registry)) {
+                                                    echo $form_isdemo ? $apikey : $openfactura_registry[0]->apikey;
+                                                } ?>"
+                                            <?php
+                                                if($form_isdemo) {
+                                                    ?> disabled <?php
+                                                }
+                                            ?>
+                                        />
                                     </div>
                                     <div class="form-field__hint">
                                         Ingresa tu API Key para para utilizar tus datos almacenados en OpenFactura.
+                                        <a class="get-apikey" href="https://www.openfactura.cl/">¿Dónde obtengo mi API Key?</a>
                                     </div>
                                 </div>
                             </div>
 
                         </div>
-                        <div class="col-4">
-                            <div class="form-apikey" id='get-apikey'>
-                                <a class="get-apikey" href="https://www.openfactura.cl/">¿Dónde obtengo mi API Key?</a>
+                        <div class="col-2">
+                            <div class="wrapper_content">
+                                <button type="submit" class="button-primary">Guardar</button>
                             </div>
                         </div>
                     </div>
 
                     <div class="checkBoxContainer">
                         <div class="container">
-                            <input type="checkbox" id="check0" name="demo" value=<?php if (!empty($openfactura_registry)) {
-                                                                                        echo $openfactura_registry[0]->is_demo;
-                                                                                        if ($openfactura_registry[0]->is_demo == 1) { ?> checked <?php
-                                                                                                                                                }
-                                                                                                                                            } ?> />
+                            <input 
+                                type="checkbox" 
+                                id="check0" 
+                                name="demo" 
+                                value=<?php 
+                                    if (!empty($openfactura_registry)) {
+                                        echo $openfactura_registry[0]->is_demo;
+                                        if ($openfactura_registry[0]->is_demo == 1) {
+                                             ?> checked <?php
+                                        }
+                                    } ?> 
+                                />
                             <label for="check0" class="md-checkbox"></label>
                         </div>
 
@@ -747,11 +783,18 @@ function sub_menu_option_openfactura()
 
                     <div class="checkBoxContainer">
                         <div class="container">
-                            <input type="checkbox" id="check1" name="automatic39" value=<?php if (!empty($openfactura_registry)) {
-                                                                                            echo $openfactura_registry[0]->generate_boleta;
-                                                                                            if ($openfactura_registry[0]->generate_boleta == 1) { ?> checked <?php
-                                                                                                                                                            }
-                                                                                                                                                        } ?> />
+                            <input 
+                                type="checkbox" 
+                                id="check1" 
+                                name="automatic39" 
+                                value=<?php 
+                                    if (!empty($openfactura_registry)) {
+                                        echo $openfactura_registry[0]->generate_boleta;
+                                        if ($openfactura_registry[0]->generate_boleta == 1) { 
+                                            ?> checked <?php
+                                        }
+                                    } ?> 
+                            />
                             <label for="check1" class="md-checkbox"></label>
                         </div>
 
@@ -766,11 +809,18 @@ function sub_menu_option_openfactura()
 
                     <div class="checkBoxContainer">
                         <div class="container">
-                            <input type="checkbox" id="check2" name="allow33" value=<?php if (!empty($openfactura_registry)) {
-                                                                                        echo $openfactura_registry[0]->allow_factura;
-                                                                                        if ($openfactura_registry[0]->allow_factura == 1) { ?> checked <?php
-                                                                                                                                                    }
-                                                                                                                                                } ?> />
+                            <input 
+                                type="checkbox" 
+                                id="check2" 
+                                name="allow33" 
+                                value=<?php 
+                                    if (!empty($openfactura_registry)) {
+                                        echo $openfactura_registry[0]->allow_factura;
+                                        if ($openfactura_registry[0]->allow_factura == 1) {
+                                             ?> checked <?php
+                                        }
+                                    } ?>
+                            />
                             <label for="check2" class="md-checkbox"></label>
                         </div>
 
@@ -787,11 +837,18 @@ function sub_menu_option_openfactura()
 
                     <div class="checkBoxContainer">
                         <div class="container">
-                            <input type="checkbox" id="check5" name="product-description" value=<?php if (!empty($openfactura_registry)) {
-                                                                                                    echo $openfactura_registry[0]->is_description;
-                                                                                                    if ($openfactura_registry[0]->is_description == 1) { ?> checked <?php
-                                                                                                                                                                }
-                                                                                                                                                            } ?> />
+                            <input 
+                                type="checkbox" 
+                                id="check5"
+                                name="product-description" 
+                                value=<?php 
+                                    if (!empty($openfactura_registry)) {
+                                        echo $openfactura_registry[0]->is_description;
+                                        if ($openfactura_registry[0]->is_description == 1) {
+                                             ?> checked <?php
+                                        }
+                                    } ?> 
+                            />
                             <label for="check5" class="md-checkbox"></label>
                         </div>
 
@@ -805,29 +862,17 @@ function sub_menu_option_openfactura()
 
                     <div class="checkBoxContainer">
                         <div class="container">
-                            <input type="checkbox" id="check6" name="email-link-selfservice" value=<?php if (!empty($openfactura_registry)) {
-                                                                                                        echo $openfactura_registry[0]->is_email_link_selfservice;
-                                                                                                        if ($openfactura_registry[0]->is_email_link_selfservice == 1) { ?> checked <?php
-                                                                                                                                                                                }
-                                                                                                                                                                            } ?> />
-                            <label for="check6" class="md-checkbox"></label>
-                        </div>
-
-                        <div>
-                            <label for="check6" class="checkLabel">Insertar en el correo de “Pedido Completado” el enlace de los documentos</label>
-                            <div>
-                                Al seleccionar esta opción, se incorporará en el correo que tiene por asunto “Pedido completado” el link desde donde el cliente podrá visualizar o emitir la boleta o factura. Aun cuando se desactive esta opción Haulmer enviará un correo con el link respectivo.
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="checkBoxContainer">
-                        <div class="container">
-                            <input type="checkbox" id="check3" name="enableLogo" value=<?php if (!empty($openfactura_registry)) {
-                                                                                            echo $openfactura_registry[0]->show_logo;
-                                                                                            if ($openfactura_registry[0]->show_logo == 1) { ?> checked <?php
-                                                                                                                                                    }
-                                                                                                                                                } ?> />
+                            <input 
+                                type="checkbox" 
+                                id="check3" 
+                                name="enableLogo" 
+                                value=<?php if (!empty($openfactura_registry)) {
+                                    echo $openfactura_registry[0]->show_logo;
+                                    if ($openfactura_registry[0]->show_logo == 1) { 
+                                        ?> checked <?php
+                                    }
+                                } ?> 
+                            />
                             <label for="check3" class="md-checkbox"></label>
                         </div>
 
@@ -842,9 +887,16 @@ function sub_menu_option_openfactura()
                             <div class="form-field">
                                 <div class="form-field__control">
                                     <label for="logo-url" class="form-field__label">URL logo empresa</label>
-                                    <input id="logo-url" name="logo-url" type="text t" class="form-field__input" value="<?php if (!empty($openfactura_registry)) {
-                                                                                                                            echo $openfactura_registry[0]->link_logo;
-                                                                                                                        } ?> ">
+                                    <input 
+                                        id="logo-url" 
+                                        name="logo-url" 
+                                        type="text t" 
+                                        class="form-field__input" 
+                                        value="<?php 
+                                            if (!empty($openfactura_registry)) {
+                                                echo $openfactura_registry[0]->link_logo;
+                                            } ?>"
+                                    />
                                 </div>
                                 <div class="form-field__hint">
                                     No se mostrará el logotipo si la URL no es https. Proporciones 16:9, Dimensiones ideales de 128 X 72px.
@@ -863,7 +915,7 @@ function sub_menu_option_openfactura()
                     </div>
                     <p>
                         Los siguientes campos se obtienen desde el SII, a través de
-                        OpenFactura, y no pueden ser modificados desde acá. Si cuentas con
+                        OpenFactura y no pueden ser modificados aquí. Si cuentas con
                         sucursales, puedes seleccionar la que desees ocupar. Si has realizado
                         cambios en el SII, recuerda hacer clic en 'Actualizar' para que se
                         vean reflejados.
@@ -874,9 +926,16 @@ function sub_menu_option_openfactura()
                             <div class="form-field">
                                 <div class="form-field__control">
                                     <label for="rut" class="form-field__label">RUT</label>
-                                    <input id="rut" type="tex t" class="form-field__input" value="<?php if (!empty($openfactura_registry)) {
-                                                                                                        echo $openfactura_registry[0]->rut;
-                                                                                                    } ?>" disabled>
+                                    <input 
+                                        id="rut" 
+                                        type="tex t" 
+                                        class="form-field__input" 
+                                        value="<?php 
+                                            if (!empty($openfactura_registry)) {
+                                            echo $openfactura_registry[0]->rut;
+                                        } ?>" 
+                                        disabled
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -884,10 +943,16 @@ function sub_menu_option_openfactura()
                             <div class="form-field">
                                 <div class="form-field__control">
                                     <label for="company-name" class="form-field__label">Razón Social</label>
-                                    <input id="company-name" type="text t" class="form-field__input" value="<?php
-                                                                                                            if (!empty($openfactura_registry)) {
-                                                                                                                echo $openfactura_registry[0]->razon_social;
-                                                                                                            } ?>" disabled>
+                                    <input 
+                                        id="company-name" 
+                                        type="text t" 
+                                        class="form-field__input" 
+                                        value="<?php
+                                            if (!empty($openfactura_registry)) {
+                                                echo $openfactura_registry[0]->razon_social;
+                                            } ?>"
+                                        disabled
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -895,10 +960,16 @@ function sub_menu_option_openfactura()
                             <div class="form-field">
                                 <div class="form-field__control">
                                     <label for="description" class="form-field__label">Glosa descriptiva (Ex Giro)</label>
-                                    <input id="description" type="text t" class="form-field__input" value="<?php
-                                                                                                            if (!empty($openfactura_registry)) {
-                                                                                                                echo $openfactura_registry[0]->glosa_descriptiva;
-                                                                                                            } ?>" disabled>
+                                    <input 
+                                        id="description" 
+                                        type="text t" 
+                                        class="form-field__input" 
+                                        value="<?php
+                                            if (!empty($openfactura_registry)) {
+                                                echo $openfactura_registry[0]->glosa_descriptiva;
+                                            } ?>"
+                                        disabled
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -967,11 +1038,7 @@ function sub_menu_option_openfactura()
                         </div>
                     </div>
 
-                </section>
-
-                <div class="wrapper_content">
-                    <button type="submit" class="button-primary">Guardar</button>
-                </div>
+                </section> 
             </form>
         </div>
     </div>
@@ -1026,57 +1093,23 @@ function so_payment_complete($order_id)
 }
 
 /**
- * Create a new document to issue
+ * Create a new document to issue. This functions does the following:
+ * - Iterates the order's items, fees and shipping.
+ * - If the net amount is < 10 CLP or tax free discounts are < 0
+ *   returns the order and adds a error note.
+ * - Gets the customer data.
+ * - Gets the order's hyperlink and custom logo.
+ * - Gets the plugin configuration for the document.
+ * - Prepares the document headers.
+ * - Creates the document to issue.
+ * - Sends the document to backend issue service.
+ * - Handles the response and shows it as order notes.
+ * - Returns the order.
  */
 function create_json_openfactura($order, $openfactura_registry){
-
-    writeLogs("Registry");
-    writeLogs($openfactura_registry);
-
-    $document_send = array();
-    $response["response"] = ["FOLIO", "SELF_SERVICE"];
-    if (!empty($order->get_billing_first_name()) && !empty($order->get_billing_last_name()) && !empty($order->get_billing_email())) {
-        $customer["customer"] = ["fullName" => substr($order->get_billing_first_name() . " " . $order->get_billing_last_name(), 0, 100), "email" => substr($order->get_billing_email(), 0, 80)];
-    } elseif (!empty($order->get_billing_first_name()) && !empty($order->get_billing_email())) {
-        $customer["customer"] = ["fullName" => substr($order->get_billing_first_name(), 0, 100), "email" => substr($order->get_billing_email(), 0, 80)];
-    } elseif (!empty($order->get_billing_first_name())) {
-        $customer["customer"] = ["fullName" => substr($order->get_billing_first_name(), 0, 100)];
-    } elseif (!empty($order->get_billing_email())) {
-        $customer["customer"] = ["email" => substr($order->get_billing_email(), 0, 100)];
-    }
-
-    if (!empty($openfactura_registry->link_logo) && $openfactura_registry->show_logo) {
-        $customize_page["customizePage"] = ["urlLogo" => $openfactura_registry->link_logo, 'externalReference' => ["hyperlinkText" => "Orden de Compra #" . $order->get_id(), "hyperlinkURL" => wc_get_checkout_url() .
-            "order-received/" . $order->get_order_number() . "/key="
-            . $order->get_order_key()]];
-    } else {
-        $customize_page["customizePage"] = ['externalReference' => ["hyperlinkText" => "Orden de Compra #" . $order->get_id(), "hyperlinkURL" => wc_get_checkout_url() .
-            "order-received/" . $order->get_order_number() . "/key="
-            . $order->get_order_key()]];
-    }
-    $date = $order->get_date_paid('date');
-    $date = $date->date_i18n($format = 'Y-m-d');
-    if ($openfactura_registry->generate_boleta == "1") {
-        $generate_boleta = true;
-    } else {
-        $generate_boleta = false;
-    }
-    if ($openfactura_registry->allow_factura == "1") {
-        $allow_factura = true;
-    } else {
-        $allow_factura = false;
-    }
-    $self_service["selfService"] = [
-        "issueBoleta" => $generate_boleta,
-        "allowFactura" => $allow_factura,
-        "documentReference" => [
-            [
-                "type" => "801",
-                "ID" => $order->get_id(),
-                "date" => $date
-            ]
-        ]
-    ];
+    /**
+     * Defines variables to handle order.
+     */
     $is_exe = $order->get_total_tax() == 0;
     $is_afecta = !$is_exe;
     $document_type = '';
@@ -1087,38 +1120,32 @@ function create_json_openfactura($order, $openfactura_registry){
     $items = null;
     $note = '';
 
-    //Loop through order tax items searching is taxable
-    /*foreach ($order->get_items() as $item) {
-        if ($item->get_total_tax() == 0) {
-            $is_exe = true;
-        } else {
-            $is_afecta = true;
-        }
-    }
-    //Loop through order shipping items searching is taxable
-    foreach ($order->get_items('shipping') as $item_id => $shipping_item) {
-        if ($shipping_item->get_total_tax() == 0) {
-            $is_shipping_exe = true;
-        } else {
-            $falg_prices_include_tax = true; evisar
-        }
-    }
-    //Loop through order fee items searching is taxable
-    foreach ($order->get_items('fee') as $item_id => $item_fee) {
-        $fee_total_tax = $item_fee->get_total_tax();
-        if ($fee_total_tax == 0) {
-            $is_fee_exe = true;
-        } else {
-            $falg_prices_include_tax = true; evisar
-        }
-    }*/
+    /**
+     * Defines item (i) and discounts (idsto) counters.
+     */
     $i = 1;
     $idsto = 0;
+
+    /**
+     * For each item in the order
+     */
     foreach ($order->get_items() as $item) {
+
+        /**
+         * Get item name and description
+         */
         $product = $item->get_product();
         $name_product = $product->get_name();
         $description_product = strip_tags(html_entity_decode($product->get_description()));
-        $is_exe = $item->get_subtotal() == $item->get_total();
+
+        /**
+         * Determine if item is tax free.
+         */
+        $is_exe = $item->get_total_tax() == 0;
+
+        /** 
+         * Sanitize item name and description. Assign a default item name should it be empty. 
+         */
         if (empty($name_product)) {
             $name_product = "item";
         } else {
@@ -1139,182 +1166,327 @@ function create_json_openfactura($order, $openfactura_registry){
                 )
             );
         }
+
+        /**
+         * If item is tax free:
+         */
         if ($item->get_total_tax() == 0) {
-            //exenta
-            $PrcItem = round($item->get_subtotal()) / $item->get_quantity();
-            $MontoItem = round($item->get_subtotal());
-            $descuento = $item->get_subtotal() - $item->get_total();
+            /**
+             * Calculate item's individual value based on total and quantity; item's subtotal and discount.
+             * The total value will be lower than the subtotal when a coupon is applied.
+             */
+            $MontoItem = $item->get_subtotal();
+            $PrcItem = $MontoItem / $item->get_quantity();
+            $descuento = $MontoItem - $item->get_total();
+
+            /**
+             * Create item map for issue request. Add description to items map if item has one.
+             */
+            $items = [
+                "NroLinDet" => $i,
+                'NmbItem' => substr($name_product, 0, 80),
+                'QtyItem' => $item->get_quantity(),
+                'PrcItem' => round($PrcItem, 0),
+                'MontoItem' => round($MontoItem - $descuento, 0),
+                'IndExe' => 1
+            ];
+            
             if ($openfactura_registry->is_description == '1' && !empty($description_product)) {
-                $items = [
-                    "NroLinDet" => $i,
-                    'NmbItem' => substr($name_product, 0, 80),
-                    'DscItem' => substr($description_product, 0, 990),
-                    'QtyItem' => $item->get_quantity(),
-                    'PrcItem' => round($PrcItem),
-                    'MontoItem' => $MontoItem - round($descuento, 0),
-                    'IndExe' => 1
-                ];
-            } else {
-                $items = [
-                    "NroLinDet" => $i,
-                    'NmbItem' => substr($name_product, 0, 80),
-                    'QtyItem' => $item->get_quantity(),
-                    'PrcItem' => round($PrcItem),
-                    'MontoItem' => $MontoItem - round($descuento, 0),
-                    'IndExe' => 1
-                ];
+                $items['DscItem'] = substr($description_product, 0, 990);
             }
+
+            /**
+             * Add discount to item map.
+             */
             if ($descuento > 0) {
                 $items['DescuentoMonto'] = round($descuento, 0);
             }
-            $mnt_exe += $MontoItem - round($descuento, 0);
+
+            /**
+             * Add discounted item value to tax free amount counter.
+             * If the item's net amount is negative, it's a global discount.
+             * The value of the discount also has to be added to the tax free net total.
+             */
+            $mnt_exe += round($MontoItem - $descuento, 0);
+        
+        /**
+        * If the item has tax:
+        */
         } else {
-            //afecta
-            $PrcItem = round($item->get_subtotal()) / $item->get_quantity();
-            $MontoItem = round($item->get_subtotal());
-            $descuento = $item->get_subtotal() - $item->get_total();
+            /**
+             * Calculate item's individual value based on total and quantity; item's subtotal and discount.
+             */
+            $MontoItem = $item->get_subtotal() + $item->get_subtotal_tax();
+            $PrcItem = $MontoItem / $item->get_quantity();
+            $descuento = $MontoItem - ($item->get_total() + $item->get_total_tax());
+
+            /**
+             * Create item map for issue request. Add description to items map if item has one.
+             */
+            $items = [
+                "NroLinDet" => $i,
+                'NmbItem' => substr($name_product, 0, 80),
+                'QtyItem' => $item->get_quantity(),
+                'PrcItem' => round($PrcItem, 0),
+                'MontoItem' => round($MontoItem - $descuento, 0)
+            ];
+            
             if ($openfactura_registry->is_description == '1' && !empty($description_product)) {
-                $items = [
-                    "NroLinDet" => $i,
-                    'NmbItem' => substr($name_product, 0, 80),
-                    'DscItem' => substr($description_product, 0, 990),
-                    'QtyItem' => $item->get_quantity(),
-                    'PrcItem' => round($PrcItem, 4),
-                    'MontoItem' => $MontoItem - round($descuento, 0)
-                ];
-            } else {
-                $items = [
-                    "NroLinDet" => $i,
-                    'NmbItem' => substr($name_product, 0, 80),
-                    'QtyItem' => $item->get_quantity(),
-                    'PrcItem' => round($PrcItem, 4),
-                    'MontoItem' => $MontoItem - round($descuento, 0)
-                ];
+                $items['DscItem'] = substr($description_product, 0, 990);
             }
+
+            /**
+             * Add discount amount to item map
+             */
             if ($descuento > 0) {
                 $items['DescuentoMonto'] = round($descuento, 0);
             }
-            $mnt_neto += $MontoItem - round($descuento, 0);
+            
+            /**
+             * Add discounted item value to net amount counter.
+             * If the item's net amount is negative, it's a global discount.
+             * The value of the discount also has to be added to the net total.
+             */
+            $mnt_neto += round($MontoItem - $descuento, 0);
         }
+
+        /**
+         * If the item is free, add a note pointing it out.
+         */
         if (intval($MontoItem) == 0) {
             if ($note == '') {
                 $note = 'Incluido sin costo en la compra:';
             }
             $note .= '<br/> *';
             $note .= ' ' . 1 . ' ' . substr($name_product, 0, 80);
+        
+        /**
+         * If the item amount is less that zero, create a discount map. Increase idsto counter.
+         */
         } elseif (intval($MontoItem) < 0) {
             $idsto++;
+            /**
+             * In Woocommerce, coupon discounts are divided between all items in the order.
+             * If there's a global discount added as an order item,
+             * the discount will include an additional discount from the coupon. 
+             * This gets the global discount plus the coupon discount. Then adds its taxes.
+             */
+            $mnt_descuento = $item->get_total() + ($is_exe ? 0 : $item->get_total_tax());
+
             $dcto = [
                 "NroLinDR" => $idsto,
                 "TpoMov" => "D",
                 "TpoValor" => "$",
-                "ValorDR" => strval($MontoItem * -1)
+                "ValorDR" => round($mnt_descuento * -1)
             ];
+
+            /**
+             * Specify if discount is tax free.
+             */
             if ($is_exe) {
                 $dcto["IndExeDR"] = 1;
             }
+
+            /**
+             * Push map into dsctos array for issue request.
+             */
             array_push($dsctos, $dcto);
         } else {
+            /**
+             * Increase i counter and push items map into detalle array for issue request.
+             */
             $i++;
             array_push($detalle, $items);
         }
     }
 
-    //Loop through order fee items
+   /**
+    * For each fee item:
+    */
     foreach ($order->get_items('fee') as $item_id => $item_fee) {
-        $fee_total_tax = $item_fee->get_total_tax();
+        /**
+         * Get fee's data.
+         */
+        $fee_total_tax = round($item_fee->get_total_tax());
         $fee_name = $item_fee->get_name();
-        $fee_amount = round($item_fee->get_amount());
         $fee_total = round($item_fee->get_total());
+        $fee_net_mnt = $fee_total + $fee_total_tax;
+
+        /**
+         * If fee doesn't have a name assign a default one.
+         */
         if (empty($fee_name)) {
             $fee_name = "impuesto";
         }
+
+        /**
+         * If there's no fee tax, handle as a tax free item.
+         */
         if ($fee_total_tax == 0) {
+            /**
+             * Add fee amount to exempt amount counter.
+             */
             $mnt_exe += $fee_total;
+
+            /**
+             * Create fee map for issue request.
+             */
             $items = [
                 "NroLinDet" => $i,
                 'NmbItem' => substr($fee_name, 0, 80),
-                'QtyItem' => 1, 'PrcItem' => $fee_amount,
+                'QtyItem' => 1, 
+                'PrcItem' => $fee_total,
                 'MontoItem' => $fee_total,
                 'IndExe' => 1
             ];
+        
+        /**
+         * If the item has a tax, handle it as a taxable item.
+         */
         } else {
+            /**
+             * Taxable and exempt failsafe. Flips flags if this item has a tax
+             * and the tax free flags is enabled. This flags controls the whole
+             * order, not the item.
+             */
             if ($is_exe) {
                 $is_exe = false;
                 $is_afecta = true;
             }
-            $mnt_neto += $fee_total;
+
+            /**
+             * Add fee amount to net amount counter.
+             */
+            $mnt_neto += $fee_net_mnt;
+
+            /**
+             * Create fee map for issue request.
+             */
             $items = [
                 "NroLinDet" => $i,
                 'NmbItem' => substr($fee_name, 0, 80),
                 'QtyItem' => 1,
-                'PrcItem' => $fee_amount,
-                'MontoItem' => $fee_total
+                'PrcItem' => $fee_net_mnt,
+                'MontoItem' => $fee_net_mnt
             ];
         }
+        /**
+         * If the fee is free add a note pointing it out.
+         */
         if (intval($fee_total) == 0) {
             if ($note == '') {
                 $note = 'Incluido sin costo en la compra:';
             }
             $note .= '<br/> *';
             $note .= ' ' . 1 . ' ' . substr($fee_name, 0, 80);
+        
+        /**
+         * If the fee amount is less than zero, create a discount map. Increase idcsto counter.
+         */
         } elseif (intval($fee_total) < 0) {
             $idsto++;
             $dcto = [
                 "NroLinDR" => $idsto,
                 "TpoMov" => "D",
                 "TpoValor" => "$",
-                "ValorDR" => strval($fee_total * -1)
+                "ValorDR" => strval($fee_net_mnt * -1)
             ];
+
+            /**
+             * Push map into dsctos array for issue request.
+             */
             array_push($dsctos, $dcto);
         } else {
+            /**
+             * Increase i counter and push items map into detalle array for issue request.
+             */
             $i++;
             array_push($detalle, $items);
         }
     }
 
-    //Loop through order shipping items
+    /**
+     * For each shipping item:
+     */
     foreach ($order->get_items('shipping') as $item_id => $shipping_item) {
-        if ($shipping_item->get_total() == 0) {
-            $monto_item = 0;
-            $prc_item = 1;
-        } else {
-            $monto_item = round($shipping_item->get_total());
-            $prc_item = round($shipping_item->get_total());
-        }
+        /**
+         * Get shipping amount and price. Assign item price as 1 should the shipping be free.
+         */
+        $monto_item = round($shipping_item->get_total() + $shipping_item->get_total_tax());
+        $prc_item = $monto_item == 0 ? 1 : $monto_item;
+
+        /**
+         * Get shipping item's name. Assign a default name if it doesn't have one.
+         */
         $shipping_item_get_name = $shipping_item->get_name();
         if (empty($shipping_item_get_name)) {
             $shipping_item_get_name = "Reparto";
         }
+
+        /**
+         * If shipping is tax free, handle as such:
+         */
         if ($shipping_item->get_total_tax() == 0) {
-            $mnt_exe = $mnt_exe + $monto_item;
-            $items = [
-                "NroLinDet" => $i,
-                'NmbItem' => substr($shipping_item->get_name(), 0, 80),
-                'QtyItem' => 1, 'PrcItem' => round($prc_item, 6),
-                'MontoItem' => intval($monto_item),
-                'IndExe' => 1
-            ];
-        } else {
-            if ($is_exe) {
-                $is_exe = false;
-                $is_afecta = true;
-            }
-            $mnt_neto += intval($monto_item);
+            /**
+             * Add shipping amount to tax free amount counter.
+             */
+            $mnt_exe += $monto_item;
+
+            /**
+             * Create an items map for the shipping item.
+             */
             $items = [
                 "NroLinDet" => $i,
                 'NmbItem' => substr($shipping_item->get_name(), 0, 80),
                 'QtyItem' => 1,
-                'PrcItem' => round($prc_item, 6),
-                'MontoItem' => intval($monto_item)
+                'PrcItem' => $prc_item,
+                'MontoItem' => $monto_item,
+                'IndExe' => 1
+            ];
+        /**
+         * If the shipping is taxable
+         */
+        } else {
+            /**
+             * Taxable and exempt failsafe. Flips flags if this item has a tax
+             * and the tax free flags is enabled. This flags controls the whole
+             * order, not the item.
+             */
+            if ($is_exe) {
+                $is_exe = false;
+                $is_afecta = true;
+            }
+
+            /**
+             * Add shipping amount to net amount counter.
+             */
+            $mnt_neto += $monto_item;
+
+            /**
+             * Create an items map for the shipping item.
+             */
+            $items = [
+                "NroLinDet" => $i,
+                'NmbItem' => substr($shipping_item->get_name(), 0, 80),
+                'QtyItem' => 1,
+                'PrcItem' => $prc_item,
+                'MontoItem' => $monto_item
             ];
         }
+
+        /**
+         * If the shipping is free add a note pointing it out.
+         */
         if (intval($monto_item) == 0) {
             if ($note == '') {
                 $note = 'Incluido sin costo en la compra:';
             }
             $note .= '<br/> *';
             $note .= ' ' . 1 . ' ' . substr($shipping_item->get_name(), 0, 80);
+        
+        /**
+         * If the shipping amount is less than zero, create a discount map. Increase idcsto counter.
+         */
         } elseif (intval($monto_item) < 0) {
             $idsto++;
             $dcto = [
@@ -1323,44 +1495,154 @@ function create_json_openfactura($order, $openfactura_registry){
                 "TpoValor" => "$",
                 "ValorDR" => strval($monto_item * -1)
             ];
+
+            /**
+             * Push map into dsctos array for issue request.
+             */
             array_push($dsctos, $dcto);
         } else {
+            /**
+             * Increase i counter and push items map into detalle array for issue request.
+             */
             $i++;
             array_push($detalle, $items);
         }
     }
+
+    /**
+     * If the order's total amount is less than $10 pesos, return a note to the order.
+     */
     if (intval($order->get_total()) < 10) {
         $note = "No se permiten emisiones con un valor menor a 10 CLP.";
         $order->add_order_note($note);
         return $order;
     }
+
+    /**
+     * If the tax free discount is greater than tax free net amount, return a note to the order.
+     */
+    if (intval($mnt_exe) < 0) {
+        $note = "No se permiten descuentos exentos que superen montos exentos." . "\n" .
+                "Reintente con un descuento afecto.";
+        $order->add_order_note($note);
+        return $order;
+    }
+
+    /**
+     * Gets customer info: full name, last name and email.
+     */
+    $customerData = [];
+
+    if (!empty($order->get_billing_first_name())) {
+        $customerData["fullName"] = substr($order->get_billing_first_name(), 0, 100);
+    }
+
+    if (!empty($order->get_billing_last_name())) {
+        $customerData["fullName"] .= " " . substr($order->get_billing_last_name(), 0, 100 - strlen($customerData["fullName"]));
+    }
+
+    if (!empty($order->get_billing_email())) {
+        $customerData["email"] = substr($order->get_billing_email(), 0, 80);
+    }
+
+    $customer["customer"] = $customerData;
+
+    /**
+     * Handle order url and custom logo
+     */
+    $customize_page["customizePage"] = [
+        'externalReference' => [
+            "hyperlinkText" => "Orden de Compra #" . $order->get_id(),
+            "hyperlinkURL" => wc_get_checkout_url() . "order-received/" . $order->get_order_number() . "/key=" . $order->get_order_key()
+        ]
+    ];
+    
+    if ($openfactura_registry->show_logo && !empty($openfactura_registry->link_logo)) {
+        $customize_page["customizePage"]["urlLogo"] = $openfactura_registry->link_logo;
+    }
+
+    /**
+     * Get order date
+     */
+    $date = $order->get_date_paid('date');
+    $date = $date->date_i18n($format = 'Y-m-d');
+
+    /**
+     * Get openfactura's plugin config. Handles permissions to get boleta and to allow factura.
+     */
+    $generate_boleta = $openfactura_registry->generate_boleta == "1";
+
+    $allow_factura = $openfactura_registry->allow_factura == "1";
+
+    /**
+     * Prepares selfservice header for issue request.
+     */
+    $self_service["selfService"] = [
+        "issueBoleta" => $generate_boleta,
+        "allowFactura" => $allow_factura,
+        "documentReference" => [
+            [
+                "type" => "801",
+                "ID" => $order->get_id(),
+                "date" => $date
+            ]
+        ]
+    ];
+
+    /**
+     * If the afecta flag is active:
+     * This will trigger if there was at least one item with tax,
+     * of if the total tax amount isn't zero.
+     */
     if ($is_afecta) {
-        $iva = round(intval($mnt_neto) * 0.19);
-        $id_doc = ["FchEmis" => $date,  "IndMntNeto" => 2];
+        /**
+         * Calculate IVA from the net total and a fixed value, Chile's current IVA.
+         */
+        $iva = round($mnt_neto * 0.19 / 1.19); 
+        /**
+         * Handle issue request's headers. This defines the net amount, the
+         * exempt amount and the tax of the order. 
+         * IndMntNeto = 1 is a constant that the issue backend expects to receive.
+         */
+        $id_doc = ["FchEmis" => $date ];
         $totales = [
-            "MntNeto" => intval($mnt_neto),
+            "MntNeto" => round($mnt_neto / (1 + (19 /100))),
             "TasaIVA" => "19.00",
             "IVA" => $iva,
-            'MntExe' => intval($mnt_exe),
-            "MntTotal" => intval($order->get_total())
+            'MntExe' => round($mnt_exe),
+            "MntTotal" => round($order->get_total())
         ];
+
+        /**
+         * Define document type and code for issue request.
+         */
         $document_type = 'Boleta Electrónica Afecta';
         $document_code = "39";
+    
+    /**
+     * If the afecta flag isn't active, handle order as tax free.
+     */
     } else {
-        $date = $order->get_date_paid('date');
-        $date = $date->date_i18n('Y-m-d');
+        /**
+         * Handle issue request's headers. This defines the net amount and the tax free amount.
+         */
         $id_doc = ["FchEmis" => substr($date, 0, 10)];
         $totales = [
-            "MntTotal" => intval($order->get_total()),
-            'MntExe' => intval($mnt_exe)
+            "MntTotal" => round($order->get_total()),
+            'MntExe' => round($mnt_exe)
         ];
+
+        /**
+         * Define document type and code for issue request.
+         */
         $document_type = 'Boleta Electrónica Exenta (41)';
         $document_code = "41";
     }
-    //$order->add_order_note(json_encode($detalle));
-    //$order->add_order_note(json_encode($totales));
-    writeLogs("cdgSIISucur ANTES DEL EMISOR");
-    writeLogs($openfactura_registry->cdgSIISucur);
+
+    /**
+     * Prepare emisor map for issue request headers. Get info from openfactura's
+     * config table.
+     */
     $emisor = [
         "RUTEmisor" => substr($openfactura_registry->rut, 0, 10),
         "RznSocEmisor" => substr($openfactura_registry->razon_social, 0, 100),
@@ -1370,15 +1652,19 @@ function create_json_openfactura($order, $openfactura_registry){
         "CmnaOrigen" => substr($openfactura_registry->comuna_origen, 0, 20),
         "Acteco" => $openfactura_registry->codigo_actividad_economica_active
     ];
-    writeLogs("cdgSIISucur DESPUES DEL EMISOR");
-    writeLogs($openfactura_registry->cdgSIISucur);
+
+    /**
+     * Replace values in emisor with data from current active sucursal.
+     */
     $sucursal_and_code = explode("|", $openfactura_registry->sucursal_active);
     if (count($sucursal_and_code) == 2) {
         $emisor["DirOrigen"] = substr($sucursal_and_code[0], 0, 60);
         $emisor["CdgSIISucur"] = $sucursal_and_code[1];
     }
-    writeLogs("cdgSIISucur DESPUES DEL EXPLODE");
-    writeLogs($emisor['CdgSIISucur']);
+
+    /**
+     * Prepare document headers for issue request.
+     */
     $dte["dte"] = [
         "Encabezado" => [
             "IdDoc" => $id_doc,
@@ -1392,6 +1678,19 @@ function create_json_openfactura($order, $openfactura_registry){
         'origin' => 'WOOCOMMERCE'
     ];
 
+    /**
+     * Array used to prepare request document to be sent to issue backend.
+     */
+    $document_send = array();
+
+    /**
+     * Response header for issue request
+     */
+    $response["response"] = ["FOLIO", "SELF_SERVICE"];
+
+    /**
+     * Merge arrays as needed by the api.
+     */
     $document_send = array_merge($document_send, $response);
     if (!empty($customer)) {
         $document_send = array_merge($document_send, $customer);
@@ -1400,17 +1699,28 @@ function create_json_openfactura($order, $openfactura_registry){
     $document_send = array_merge($document_send, $self_service);
     $document_send = array_merge($document_send, $dte);
     $document_send = array_merge($document_send, $custom);
-    //$order->add_order_note(json_encode($document_send));
+
     if ($note != '') {
         $document_send = array_merge($document_send, ["notaInf" => $note]);
     }
+
+    error_log(print_r($order, true));
+    error_log(print_r($document_send, true));
+
+    /**
+     * Encode document send object as a json object
+     */
     $document_send = json_encode($document_send, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-    if (is_array($document_send) || is_object($document_send)) {
+
+    /*if (is_array($document_send) || is_object($document_send)) {
         error_log(print_r($document_send, true));
     } else {
         error_log($document_send);
-    }
-    //generate document
+    }*/
+
+    /**
+     * Define API url based on current environment
+     */
     $url_generate = '';
     if ($openfactura_registry->is_demo == "1") {
         //dev environment
@@ -1419,6 +1729,10 @@ function create_json_openfactura($order, $openfactura_registry){
         //prod environment
         $url_generate = 'https://api.haulmer.com/v2/dte/document';
     }
+
+    /**
+     * Prepare POST request to API
+     */
     $curl = curl_init();
     curl_setopt_array($curl, array(
         CURLOPT_URL => $url_generate,
@@ -1435,15 +1749,26 @@ function create_json_openfactura($order, $openfactura_registry){
             "Idempotency-Key:" . "WOOCOMMERCE" . "_" . $emisor['rut'] . "_" . date("Y/m/d_H:i:s") . "_" . $order->get_order_key(),
         ),
     ));
+
+    /**
+     * Handle POST rquest and handle response
+     */
     $response = curl_exec($curl);
     $err = curl_error($curl);
     curl_close($curl);
 
-    if (is_array($response) || is_object($response)) {
+    /**
+     * Log response.
+     */
+    /*if (is_array($response) || is_object($response)) {
         error_log(print_r($response, true));
     } else {
         error_log($response);
-    }
+    }*/
+
+    /**
+     * Handle response in woocommerce's order details interface in wordpress' admin panel
+     */
     $response = json_decode($response, true);
     if (!empty($response['SELF_SERVICE']['url'])) {
         $note = __("Obten tu documento tributario en: " . $response['SELF_SERVICE']['url']);
@@ -1506,11 +1831,11 @@ add_action('woocommerce_email_order_details', 'my_completed_order_email_instruct
 function my_completed_order_email_instructions($order, $sent_to_admin, $plain_text, $email)
 {
     // Only for processing and completed email notifications to customer
-    if (is_array($order) || is_object($order)) {
+    /*if (is_array($order) || is_object($order)) {
         error_log(print_r($order, true));
     } else {
         error_log($order);
-    }
+    }*/
     if (!('customer_completed_order' == $email->id)) {
         return;
     }
