@@ -4,7 +4,8 @@ if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
 
-function writeLogs($txt){
+function writeLogs($txt)
+{
     if (is_array($txt) || is_object($txt)) {
         error_log(print_r($txt, true));
     } else {
@@ -14,10 +15,11 @@ function writeLogs($txt){
 
 /**
  * Registration of the plugin
- * 
+ *
  * Creation of the table inside the woocommerce database.
  */
-function openfactura_registry(){
+function openfactura_registry()
+{
     #   ╔══════════════════════════════════════════════════╗
     #   ║ Create the table inside the WooCommerce Database ║
     #   ╚══════════════════════════════════════════════════╝
@@ -59,15 +61,18 @@ function openfactura_registry(){
 
 /**
  * Insert demo data
- * 
+ *
  * Insert the demo's information inside the previously created table.
  * @see openfactura_registry
  */
-function insert_demo_data(){
+function insert_demo_data()
+{
     global $wpdb;
     $demo_apikey = '928e15a2d14d4a6292345f04960f4bd3';
-    $openfactura_registry = $wpdb->get_results("SELECT * FROM  " . $wpdb->prefix . "openfactura_registry where apikey = " . "'$demo_apikey'");
-    
+    $openfactura_registry = $wpdb->get_results(
+        "SELECT * FROM  " . $wpdb->prefix . "openfactura_registry where apikey = " . "'$demo_apikey'"
+    );
+
     #   ╔═══════════════════════════════════╗
     #   ║ Check if exist an active registry ║
     #   ║         and if it's empty         ║
@@ -104,10 +109,14 @@ function insert_demo_data(){
         #   ╚═════════════════════════════════════╝
         $actividades_array = array();
         foreach ($response['actividades'] as $actividad) {
-            array_push($actividades_array, $actividad['actividadEconomica'] . "|" . $actividad['codigoActividadEconomica']);
+            array_push(
+                $actividades_array,
+                $actividad['actividadEconomica'] . "|" . $actividad['codigoActividadEconomica']
+            );
         }
         $actividades_array = json_encode($actividades_array);
-        $actividad_economica = $response['actividades'][0]['actividadEconomica'] . "|" . $response['actividades'][0]['codigoActividadEconomica'];
+        $actividad_economica = $response['actividades'][0]['actividadEconomica'] . "|" .
+                               $response['actividades'][0]['codigoActividadEconomica'];
         $codigo_actividad_economica_active = $response['actividades'][0]['codigoActividadEconomica'];
 
         #   ╔══════════════════════════════════════╗
@@ -149,18 +158,27 @@ add_action('wp_ajax_nopriv_save-data-openfactura-ajax', 'save_data_openfactura_r
 
 /**
  * Save new configuration
- * 
+ *
  * Save the new information about the plugin like the ApiKey and the permissions for the emission of bills and invoices.
  */
-function save_data_openfactura_registry(){
+function save_data_openfactura_registry()
+{
     //writeLogs("entra aca para actualizar 2");
     #   ╔═════════════════════════════╗
     #   ║   Check the checkbox info   ║
     #   ╚═════════════════════════════╝
-    if (!isset($_REQUEST['demo']) || empty($_REQUEST['demo'])) { return wp_send_json_error([400]); }
-    if (!isset($_REQUEST['automatic39']) || empty($_REQUEST['automatic39'])) { return wp_send_json_error([400]); }
-    if (!isset($_REQUEST['allow33']) || empty($_REQUEST['allow33'])) { return wp_send_json_error([400]); }
-    if (!isset($_REQUEST['enableLogo']) || empty($_REQUEST['enableLogo'])) { return wp_send_json_error([400]); }
+    if (!isset($_REQUEST['demo']) || empty($_REQUEST['demo'])) {
+         return wp_send_json_error([400]);
+    }
+    if (!isset($_REQUEST['automatic39']) || empty($_REQUEST['automatic39'])) {
+         return wp_send_json_error([400]);
+    }
+    if (!isset($_REQUEST['allow33']) || empty($_REQUEST['allow33'])) {
+         return wp_send_json_error([400]);
+    }
+    if (!isset($_REQUEST['enableLogo']) || empty($_REQUEST['enableLogo'])) {
+         return wp_send_json_error([400]);
+    }
 
     #   ╔══════════════════════════╗
     #   ║ Initialize the variables ║
@@ -177,13 +195,27 @@ function save_data_openfactura_registry(){
     #   ║ Check the config in the front ║
     #   ║  and save into previous vars  ║
     #   ╚═══════════════════════════════╝
-    if ($_REQUEST['demo'] == "true") { $demo = true; }
-    if ($_REQUEST['automatic39'] == "true") { $automatic39 = true; }
-    if ($_REQUEST['allow33'] == "true") { $allow33 = true; }
-    if ($_REQUEST['enableLogo'] == "true") { $enableLogo = true; }
-    if ($_REQUEST['description'] == "true") { $description = true; }
-    if ($_REQUEST['emailLinkSelfservice'] == "true") { $emailLinkSelfservice = true; }
-    if ($enableLogo && $_POST['urlLogo'] != '') { $link_logo = str_replace(' ', '', $_POST['urlLogo']); }
+    if ($_REQUEST['demo'] == "true") {
+         $demo = true;
+    }
+    if ($_REQUEST['automatic39'] == "true") {
+         $automatic39 = true;
+    }
+    if ($_REQUEST['allow33'] == "true") {
+         $allow33 = true;
+    }
+    if ($_REQUEST['enableLogo'] == "true") {
+         $enableLogo = true;
+    }
+    if ($_REQUEST['description'] == "true") {
+         $description = true;
+    }
+    if ($_REQUEST['emailLinkSelfservice'] == "true") {
+         $emailLinkSelfservice = true;
+    }
+    if ($enableLogo && $_POST['urlLogo'] != '') {
+         $link_logo = str_replace(' ', '', $_POST['urlLogo']);
+    }
 
     #   ╔══════════════════════════════╗
     #   ║   Get the new apikey of all  ║
@@ -195,9 +227,15 @@ function save_data_openfactura_registry(){
     $demoApiKey = '928e15a2d14d4a6292345f04960f4bd3';
     $demoApiKey2 = '41eb78998d444dbaa4922c410ef14057';
     $newApiKey = str_replace(' ', '', $_REQUEST['apikey']);
-    $registry_newapikey = $wpdb->get_results('SELECT * FROM ' . $wpdb->prefix . 'openfactura_registry WHERE apikey = "' . $newApiKey . '";')[0];
-    $exist_demo = $wpdb->get_var('SELECT COUNT(*) FROM ' . $wpdb->prefix . 'openfactura_registry WHERE apikey = "' . $demoApiKey . '";');
-    $openfactura_registry_active = $wpdb->get_results('SELECT * FROM  ' . $wpdb->prefix . 'openfactura_registry WHERE is_active = 1;')[0];
+    $registry_newapikey = $wpdb->get_results(
+        'SELECT * FROM ' . $wpdb->prefix . 'openfactura_registry WHERE apikey = "' . $newApiKey . '";'
+    )[0];
+    $exist_demo = $wpdb->get_var(
+        'SELECT COUNT(*) FROM ' . $wpdb->prefix . 'openfactura_registry WHERE apikey = "' . $demoApiKey . '";'
+    );
+    $openfactura_registry_active = $wpdb->get_results(
+        'SELECT * FROM  ' . $wpdb->prefix . 'openfactura_registry WHERE is_active = 1;'
+    )[0];
 
     #   ╔═══════════════════════════════════╗
     #   ║ Check if exist an active registry ║
@@ -239,20 +277,21 @@ function save_data_openfactura_registry(){
         #   ║ Parse the offices and activities ║
         #   ║          UPDATE VERSION          ║
         #   ╚══════════════════════════════════╝
-        if($registry_newapikey){
-            if($openfactura_registry_active->apikey == $registry_newapikey->apikey){
+        if ($registry_newapikey) {
+            if ($openfactura_registry_active->apikey == $registry_newapikey->apikey) {
                 $sucursal_active = $_POST['sucursal'];
-                $data_sucur = explode("|",$sucursal_active);
+                $data_sucur = explode("|", $sucursal_active);
                 $direccion = $data_sucur[0];
                 $codigo_direccion = $data_sucur[1];
-    
+
                 $actividad_economica_active = $_POST['actividad'];
-                $data_act = explode("|",$actividad_economica_active);
+                $data_act = explode("|", $actividad_economica_active);
                 $actividad = $data_act[0];
                 $codigo_actividad = $data_act[1];
                 //writeLogs("demo");
                 //writeLogs($demo);
-                $wpdb->update($wpdb->prefix . 'openfactura_registry',
+                $wpdb->update(
+                    $wpdb->prefix . 'openfactura_registry',
                     array(
                         'is_demo' => $demo,
                         'generate_boleta' => $automatic39,
@@ -266,12 +305,14 @@ function save_data_openfactura_registry(){
                         'codigo_actividad_economica_active' => $codigo_actividad,
                         'direccion_origen' => $direccion,
                         'json_info_contribuyente' => json_encode($response),
-                        'cdgSIISucur' => $codigo_direccion),
-                    array('apikey' => $newApiKey));
-            }
-            else{
+                        'cdgSIISucur' => $codigo_direccion
+                    ),
+                    array('apikey' => $newApiKey)
+                );
+            } else {
                 $wpdb->update($wpdb->prefix . 'openfactura_registry', array('is_active' => 0), array('is_active' => 1));
-                $wpdb->update($wpdb->prefix . 'openfactura_registry',
+                $wpdb->update(
+                    $wpdb->prefix . 'openfactura_registry',
                     array(
                         'is_active' => 1,
                         'is_demo' => $demo,
@@ -281,24 +322,28 @@ function save_data_openfactura_registry(){
                         'is_email_link_selfservice' => $emailLinkSelfservice,
                         'show_logo' => $enableLogo,
                         'link_logo' => $link_logo,
-                        'json_info_contribuyente' => json_encode($response)),
-                    array('apikey' => $newApiKey));
+                        'json_info_contribuyente' => json_encode($response)
+                    ),
+                    array('apikey' => $newApiKey)
+                );
             }
             return wp_send_json_success(['refresh']);
-        }
-        else{
-
+        } else {
             #   ╔══════════════════════════════════╗
             #   ║ Parse the offices and activities ║
             #   ║          INSERT VERSION          ║
             #   ╚══════════════════════════════════╝
             $actividades_economicas = array();
             foreach ($response['actividades'] as $actividad) {
-                array_push($actividades_economicas, $actividad['actividadEconomica'] . "|" . $actividad['codigoActividadEconomica']);
+                array_push(
+                    $actividades_economicas,
+                    $actividad['actividadEconomica'] . "|" . $actividad['codigoActividadEconomica']
+                );
             }
             if (!empty($actividades_economicas)) {
                 $actividades_economicas = json_encode($actividades_economicas);
-                $actividad_economica_active = $response['actividades'][0]['actividadEconomica'] . "|" . $response['actividades'][0]['codigoActividadEconomica'];
+                $actividad_economica_active = $response['actividades'][0]['actividadEconomica'] . "|" .
+                                              $response['actividades'][0]['codigoActividadEconomica'];
             }
 
             $sucursales = array();
@@ -308,7 +353,7 @@ function save_data_openfactura_registry(){
 
             $sucursal_active = $response['direccion'] . "|" . $response['cdgSIISucur'];
             array_push($sucursales, $sucursal_active);
-            
+
             $sucursales = json_encode($sucursales);
             $codigo_actividad_economica_active = $response['actividades'][0]['codigoActividadEconomica'];
 
@@ -318,35 +363,34 @@ function save_data_openfactura_registry(){
             #   ╚════════════════════════════════════╝
             $wpdb->update($wpdb->prefix . 'openfactura_registry', array('is_active' => 0), array('is_active' => 1));
             $wpdb->insert($wpdb->prefix . 'openfactura_registry', array(
-                'is_active' => 1, 
-                'apikey' => $newApiKey, 
-                'rut' => $response['rut'], 
-                'is_demo' => $demo, 
-                'generate_boleta' => $automatic39, 
-                'allow_factura' => $allow33, 
-                'is_description' => $description, 
-                'is_email_link_selfservice' => $emailLinkSelfservice, 
-                'show_logo' => $enableLogo, 
-                'link_logo' => $link_logo, 
-                'razon_social' => $response['razonSocial'], 
-                'glosa_descriptiva' => $response['glosaDescriptiva'], 
+                'is_active' => 1,
+                'apikey' => $newApiKey,
+                'rut' => $response['rut'],
+                'is_demo' => $demo,
+                'generate_boleta' => $automatic39,
+                'allow_factura' => $allow33,
+                'is_description' => $description,
+                'is_email_link_selfservice' => $emailLinkSelfservice,
+                'show_logo' => $enableLogo,
+                'link_logo' => $link_logo,
+                'razon_social' => $response['razonSocial'],
+                'glosa_descriptiva' => $response['glosaDescriptiva'],
                 'sucursales' => $sucursales,
                 'sucursal_active' => $sucursal_active,
                 'actividad_economica_active' => $actividad_economica_active,
                 'codigo_actividad_economica_active' => $codigo_actividad_economica_active,
                 'actividades_economicas' => $actividades_economicas,
-                'direccion_origen' => $response['direccion'], 
-                'comuna_origen' => $response['comuna'], 
-                'json_info_contribuyente' => json_encode($response), 
-                'url_doc_base' => 'url orden de compra', 
-                'name_doc_base' => 'orden de compra', 
-                'url_send' => $url_emisor, 
-                'cdgSIISucur' => $response['cdgSIISucur'] 
+                'direccion_origen' => $response['direccion'],
+                'comuna_origen' => $response['comuna'],
+                'json_info_contribuyente' => json_encode($response),
+                'url_doc_base' => 'url orden de compra',
+                'name_doc_base' => 'orden de compra',
+                'url_send' => $url_emisor,
+                'cdgSIISucur' => $response['cdgSIISucur']
             ));
             return wp_send_json_success(['insert']);
         }
-    }
-
+    } else {
     #   ╔══════════════════════════════════╗
     #   ║   If doesn't exist some active   ║
     #   ║ registry check if exist the demo ║
@@ -355,25 +399,24 @@ function save_data_openfactura_registry(){
     #   ║   exist the demo registry set    ║
     #   ║       again the demo data.       ║
     #   ╚══════════════════════════════════╝
-    else {
         if ($exist_demo) {
-            $wpdb->update($wpdb->prefix . 'openfactura_registry',
-                        array(
-                                'is_active' => 1,
-                                'is_demo' => 1, 
-                                'generate_boleta' => 1, 
-                                'allow_factura' => 1,
-                                'is_description' => 1,
-                                'is_email_link_selfservice' => 1,
-                                'show_logo' => 0,
-                            ),
-                            array(
-                                'apikey' => $demoApiKey
-                            )
-                        );
+            $wpdb->update(
+                $wpdb->prefix . 'openfactura_registry',
+                array(
+                        'is_active' => 1,
+                        'is_demo' => 1,
+                        'generate_boleta' => 1,
+                        'allow_factura' => 1,
+                        'is_description' => 1,
+                        'is_email_link_selfservice' => 1,
+                        'show_logo' => 0,
+                    ),
+                array(
+                    'apikey' => $demoApiKey
+                )
+            );
             return wp_send_json_success(['refresh']);
-        }
-        else {
+        } else {
             $wpdb->update($wpdb->prefix . 'openfactura_registry', array('is_active' => 0), array(1));
             insert_demo_data();
             return wp_send_json_success(['refresh']);
@@ -383,7 +426,7 @@ function save_data_openfactura_registry(){
 }
 
 /**
- * register the ajax action for authenticated users 
+ * register the ajax action for authenticated users
  * */
 add_action('wp_ajax_update-data-openfactura-ajax', 'update_data_openfactura_registry');
 
@@ -395,19 +438,21 @@ add_action('wp_ajax_nopriv_update-data-openfactura-ajax', 'update_data_openfactu
 /**
  * Update data table openfactura_registry
  */
-function update_data_openfactura_registry(){
+function update_data_openfactura_registry()
+{
     global $wpdb;
     $newApiKey = str_replace(' ', '', $_REQUEST['apikey']);
     $demoApiKey = '928e15a2d14d4a6292345f04960f4bd3';
     $demoApiKey2 = '41eb78998d444dbaa4922c410ef14057';
-    $openfactura_registry = $wpdb->get_results("SELECT * FROM  " . $wpdb->prefix . "openfactura_registry where apikey=" . "'$newApiKey'");
+    $openfactura_registry = $wpdb->get_results(
+        "SELECT * FROM  " . $wpdb->prefix . "openfactura_registry where apikey=" . "'$newApiKey'"
+    );
 
     #   ╔═════════════════════════╗
     #   ║  Check if the registry  ║
     #   ║  exist in the database  ║
     #   ╚═════════════════════════╝
     if (isset($openfactura_registry) && !empty($openfactura_registry)) {
-
         #   ╔═════════════════════════════╗
         #   ║ Ask if the registry is demo ║
         #   ╚═════════════════════════════╝
@@ -450,16 +495,23 @@ function update_data_openfactura_registry(){
         $flag_actvidad = false;
         if (is_array($response['actividades']) || is_object($response['actividades'])) {
             foreach ($response['actividades'] as $actividad) {
-                array_push($actividades_economicas, $actividad['actividadEconomica'] . "|" . $actividad['codigoActividadEconomica']);
-                if ($openfactura_registry[0]->actividad_economica_active == ($actividad['actividadEconomica'] . "|" . $actividad['codigoActividadEconomica'])) {
+                array_push(
+                    $actividades_economicas,
+                    $actividad['actividadEconomica'] . "|" . $actividad['codigoActividadEconomica']
+                );
+
+                $act_eco_atv = $openfactura_registry[0]->actividad_economica_active;
+                if ($act_eco_atv == ($actividad['actividadEconomica'] . "|" . $actividad['codigoActividadEconomica'])) {
                     $flag_actvidad = true;
-                    $actividad_economica_active = $actividad['actividadEconomica'] . "|" . $actividad['codigoActividadEconomica'];
+                    $actividad_economica_active = $actividad['actividadEconomica'] . "|" .
+                                                  $actividad['codigoActividadEconomica'];
                     $codigo_actividad_active = $actividad['codigoActividadEconomica'];
                 }
             }
         }
         if ($flag_actvidad == false) {
-            $actividad_economica_active = $response['actividades'][0]['actividadEconomica'] . "|" . $response['actividades'][0]['codigoActividadEconomica'];
+            $actividad_economica_active = $response['actividades'][0]['actividadEconomica'] . "|" .
+                                          $response['actividades'][0]['codigoActividadEconomica'];
             $codigo_actividad_active = $response['actividades'][0]['codigoActividadEconomica'];
         }
         $actividades_economicas = json_encode($actividades_economicas);
@@ -472,7 +524,9 @@ function update_data_openfactura_registry(){
         if (is_array($response['sucursales']) || is_object($response['sucursales'])) {
             foreach ($response['sucursales'] as $sucursal) {
                 array_push($sucursales, $sucursal['direccion'] . "|" . $sucursal['cdgSIISucur']);
-                if ($openfactura_registry[0]->sucursal_active == ($sucursal['direccion'] . "|" . $sucursal['cdgSIISucur'])) {
+
+                $suc_atv = $openfactura_registry[0]->sucursal_active;
+                if ($suc_atv == ($sucursal['direccion'] . "|" . $sucursal['cdgSIISucur'])) {
                     $flag_sucursales = true;
                     $sucursal_active = $sucursal['direccion'] . "|" . $sucursal['cdgSIISucur'];
                     $codigo_sucursal_active = $sucursal['cdgSIISucur'];
@@ -481,7 +535,8 @@ function update_data_openfactura_registry(){
         }
         if ($flag_sucursales == false) {
             if (!empty($response['sucursales'])) {
-                $sucursal_active = $response['sucursales'][0]['direccion'] . "|" . $response['sucursales'][0]['cdgSIISucur'];
+                $sucursal_active = $response['sucursales'][0]['direccion'] . "|" .
+                                   $response['sucursales'][0]['cdgSIISucur'];
                 $codigo_sucursal_active = $response['sucursales'][0]['cdgSIISucur'];
                 $wpdb->update($wpdb->prefix . 'openfactura_registry', array(
                     'cdgSIISucur' => $codigo_sucursal_active
@@ -515,12 +570,10 @@ function update_data_openfactura_registry(){
             'url_doc_base' => 'url orden de compra',
             'name_doc_base' => 'orden de compra',
             'url_send' => $url_organization,
-            'cdgSIISucur' => $codigo_sucursal_active, 
+            'cdgSIISucur' => $codigo_sucursal_active,
         ), array('id' => $openfactura_registry[0]->id));
         wp_send_json_success(['refresh']);
-    }
-    else{
-        
+    } else {
         #   ╔══════════════════════════╗
         #   ║ Initialize the variables ║
         #   ╚══════════════════════════╝
@@ -536,22 +589,34 @@ function update_data_openfactura_registry(){
         #   ║ Check the config in the front ║
         #   ║  and save into previous vars  ║
         #   ╚═══════════════════════════════╝
-        if ($_REQUEST['demo'] == "true") { $demo = true; }
-        if ($_REQUEST['automatic39'] == "true") { $automatic39 = true; }
-        if ($_REQUEST['allow33'] == "true") { $allow33 = true; }
-        if ($_REQUEST['enableLogo'] == "true") { $enableLogo = true; }
-        if ($_REQUEST['description'] == "true") { $description = true; }
-        if ($_REQUEST['emailLinkSelfservice'] == "true") { $emailLinkSelfservice = true; }
+        if ($_REQUEST['demo'] == "true") {
+            $demo = true;
+        }
+        if ($_REQUEST['automatic39'] == "true") {
+             $automatic39 = true;
+        }
+        if ($_REQUEST['allow33'] == "true") {
+             $allow33 = true;
+        }
+        if ($_REQUEST['enableLogo'] == "true") {
+             $enableLogo = true;
+        }
+        if ($_REQUEST['description'] == "true") {
+             $description = true;
+        }
+        if ($_REQUEST['emailLinkSelfservice'] == "true") {
+             $emailLinkSelfservice = true;
+        }
         if ($enableLogo && $_POST['urlLogo'] != '') {
             $link_logo = str_replace(' ', '', $_POST['urlLogo']);
         }
 
         if ($newApiKey == $demoApiKey || $newApiKey == $demoApiKey2) {
             $url_organization = 'https://dev-api.haulmer.com/v2/dte/organization';
-        }
-        else {
+        } else {
             $url_organization = 'https://api.haulmer.com/v2/dte/organization';
         }
+
         $curl = curl_init();
         curl_setopt_array($curl, array(
             CURLOPT_URL => $url_organization,
@@ -573,18 +638,22 @@ function update_data_openfactura_registry(){
             return wp_send_json_success(['error']);
         }
         $response = json_decode($response, true);
-        
+
         #   ╔══════════════════════════════════╗
         #   ║ Parse the offices and activities ║
         #   ╚══════════════════════════════════╝
 
         $actividades_economicas = array();
         foreach ($response['actividades'] as $actividad) {
-            array_push($actividades_economicas, $actividad['actividadEconomica'] . "|" . $actividad['codigoActividadEconomica']);
+            array_push(
+                $actividades_economicas,
+                $actividad['actividadEconomica'] . "|" . $actividad['codigoActividadEconomica']
+            );
         }
         if (!empty($actividades_economicas)) {
             $actividades_economicas = json_encode($actividades_economicas);
-            $actividad_economica_active = $response['actividades'][0]['actividadEconomica'] . "|" . $response['actividades'][0]['codigoActividadEconomica'];
+            $actividad_economica_active = $response['actividades'][0]['actividadEconomica'] . "|" .
+                                          $response['actividades'][0]['codigoActividadEconomica'];
         }
 
         $sucursales = array();
@@ -594,7 +663,7 @@ function update_data_openfactura_registry(){
 
         $sucursal_active = $response['direccion'] . "|" . $response['cdgSIISucur'];
         array_push($sucursales, $sucursal_active);
-        
+
         $sucursales = json_encode($sucursales);
         $codigo_actividad_economica_active = $response['actividades'][0]['codigoActividadEconomica'];
 
@@ -608,30 +677,30 @@ function update_data_openfactura_registry(){
         } catch (\Throwable $th) {
         }
         $wpdb->insert($wpdb->prefix . 'openfactura_registry', array(
-            'is_active' => 1, 
-            'apikey' => $newApiKey, 
-            'rut' => $response['rut'], 
-            'is_demo' => true, 
-            'generate_boleta' => true, 
-            'allow_factura' => true, 
-            'is_description' => true, 
-            'is_email_link_selfservice' => true, 
-            'show_logo' => false, 
-            'link_logo' => '', 
-            'razon_social' => $response['razonSocial'], 
-            'glosa_descriptiva' => $response['glosaDescriptiva'], 
-            'sucursales' => $sucursales, 
-            'sucursal_active' => $sucursal_active, 
-            'actividad_economica_active' => $actividad_economica_active, 
-            'codigo_actividad_economica_active' => $codigo_actividad_economica_active, 
-            'actividades_economicas' => $actividades_economicas, 
-            'direccion_origen' => $response['direccion'], 
-            'comuna_origen' => $response['comuna'], 
-            'json_info_contribuyente' => json_encode($response), 
-            'url_doc_base' => 'url orden de compra', 
-            'name_doc_base' => 'orden de compra', 
-            'url_send' => 'https://dev-api.haulmer.com/v2/dte/organization', 
-            'cdgSIISucur' => $response['cdgSIISucur'] 
+            'is_active' => 1,
+            'apikey' => $newApiKey,
+            'rut' => $response['rut'],
+            'is_demo' => true,
+            'generate_boleta' => true,
+            'allow_factura' => true,
+            'is_description' => true,
+            'is_email_link_selfservice' => true,
+            'show_logo' => false,
+            'link_logo' => '',
+            'razon_social' => $response['razonSocial'],
+            'glosa_descriptiva' => $response['glosaDescriptiva'],
+            'sucursales' => $sucursales,
+            'sucursal_active' => $sucursal_active,
+            'actividad_economica_active' => $actividad_economica_active,
+            'codigo_actividad_economica_active' => $codigo_actividad_economica_active,
+            'actividades_economicas' => $actividades_economicas,
+            'direccion_origen' => $response['direccion'],
+            'comuna_origen' => $response['comuna'],
+            'json_info_contribuyente' => json_encode($response),
+            'url_doc_base' => 'url orden de compra',
+            'name_doc_base' => 'orden de compra',
+            'url_send' => 'https://dev-api.haulmer.com/v2/dte/organization',
+            'cdgSIISucur' => $response['cdgSIISucur']
         ));
         wp_send_json_success(['insert']);
     }
@@ -672,7 +741,15 @@ add_action('admin_menu', 'admin_menu_option_openfactura');
  */
 function admin_menu_option_openfactura()
 {
-    add_menu_page('Header & Footer Scripts', 'OpenFactura', 'manage_options', 'openfactura', 'sub_menu_option_openfactura', '', 200);
+    add_menu_page(
+        'Header & Footer Scripts',
+        'OpenFactura',
+        'manage_options',
+        'openfactura',
+        'sub_menu_option_openfactura',
+        '',
+        200
+    );
 }
 
 /**
@@ -689,7 +766,9 @@ function sub_menu_option_openfactura()
     $apikey = '928e15a2d14d4a6292345f04960f4bd3';
 
     global $wpdb;
-    $openfactura_registry = $wpdb->get_results("SELECT * FROM  " . $wpdb->prefix . "openfactura_registry where is_active=1");
+    $openfactura_registry = $wpdb->get_results(
+        "SELECT * FROM  " . $wpdb->prefix . "openfactura_registry where is_active=1"
+    );
     $form_isdemo = !empty($openfactura_registry) && $openfactura_registry[0]->is_demo;
 
     ?>
@@ -730,14 +809,14 @@ function sub_menu_option_openfactura()
                                             name="apikey" 
                                             type="text t" 
                                             class="form-field__input" 
-                                            value="<?php 
-                                                if (!empty($openfactura_registry)) {
-                                                    echo $form_isdemo ? $apikey : $openfactura_registry[0]->apikey;
-                                                } ?>"
+                                            value="<?php
+                                            if (!empty($openfactura_registry)) {
+                                                echo $form_isdemo ? $apikey : $openfactura_registry[0]->apikey;
+                                            } ?>"
                                             <?php
-                                                if($form_isdemo) {
-                                                    ?> disabled <?php
-                                                }
+                                            if ($form_isdemo) {
+                                                ?> disabled <?php
+                                            }
                                             ?>
                                         />
                                     </div>
@@ -762,13 +841,13 @@ function sub_menu_option_openfactura()
                                 type="checkbox" 
                                 id="check0" 
                                 name="demo" 
-                                value=<?php 
-                                    if (!empty($openfactura_registry)) {
-                                        echo $openfactura_registry[0]->is_demo;
-                                        if ($openfactura_registry[0]->is_demo == 1) {
-                                             ?> checked <?php
-                                        }
-                                    } ?> 
+                                value=<?php
+                                if (!empty($openfactura_registry)) {
+                                    echo $openfactura_registry[0]->is_demo;
+                                    if ($openfactura_registry[0]->is_demo == 1) {
+                                        ?> checked <?php
+                                    }
+                                } ?> 
                                 />
                             <label for="check0" class="md-checkbox"></label>
                         </div>
@@ -787,13 +866,13 @@ function sub_menu_option_openfactura()
                                 type="checkbox" 
                                 id="check1" 
                                 name="automatic39" 
-                                value=<?php 
-                                    if (!empty($openfactura_registry)) {
-                                        echo $openfactura_registry[0]->generate_boleta;
-                                        if ($openfactura_registry[0]->generate_boleta == 1) { 
-                                            ?> checked <?php
-                                        }
-                                    } ?> 
+                                value=<?php
+                                if (!empty($openfactura_registry)) {
+                                    echo $openfactura_registry[0]->generate_boleta;
+                                    if ($openfactura_registry[0]->generate_boleta == 1) {
+                                        ?> checked <?php
+                                    }
+                                } ?> 
                             />
                             <label for="check1" class="md-checkbox"></label>
                         </div>
@@ -813,13 +892,13 @@ function sub_menu_option_openfactura()
                                 type="checkbox" 
                                 id="check2" 
                                 name="allow33" 
-                                value=<?php 
-                                    if (!empty($openfactura_registry)) {
-                                        echo $openfactura_registry[0]->allow_factura;
-                                        if ($openfactura_registry[0]->allow_factura == 1) {
-                                             ?> checked <?php
-                                        }
-                                    } ?>
+                                value=<?php
+                                if (!empty($openfactura_registry)) {
+                                    echo $openfactura_registry[0]->allow_factura;
+                                    if ($openfactura_registry[0]->allow_factura == 1) {
+                                        ?> checked <?php
+                                    }
+                                } ?>
                             />
                             <label for="check2" class="md-checkbox"></label>
                         </div>
@@ -841,13 +920,13 @@ function sub_menu_option_openfactura()
                                 type="checkbox" 
                                 id="check5"
                                 name="product-description" 
-                                value=<?php 
-                                    if (!empty($openfactura_registry)) {
-                                        echo $openfactura_registry[0]->is_description;
-                                        if ($openfactura_registry[0]->is_description == 1) {
-                                             ?> checked <?php
-                                        }
-                                    } ?> 
+                                value=<?php
+                                if (!empty($openfactura_registry)) {
+                                    echo $openfactura_registry[0]->is_description;
+                                    if ($openfactura_registry[0]->is_description == 1) {
+                                        ?> checked <?php
+                                    }
+                                } ?> 
                             />
                             <label for="check5" class="md-checkbox"></label>
                         </div>
@@ -866,9 +945,10 @@ function sub_menu_option_openfactura()
                                 type="checkbox" 
                                 id="check3" 
                                 name="enableLogo" 
-                                value=<?php if (!empty($openfactura_registry)) {
+                                value=<?php
+                                if (!empty($openfactura_registry)) {
                                     echo $openfactura_registry[0]->show_logo;
-                                    if ($openfactura_registry[0]->show_logo == 1) { 
+                                    if ($openfactura_registry[0]->show_logo == 1) {
                                         ?> checked <?php
                                     }
                                 } ?> 
@@ -892,10 +972,10 @@ function sub_menu_option_openfactura()
                                         name="logo-url" 
                                         type="text t" 
                                         class="form-field__input" 
-                                        value="<?php 
-                                            if (!empty($openfactura_registry)) {
-                                                echo $openfactura_registry[0]->link_logo;
-                                            } ?>"
+                                        value="<?php
+                                        if (!empty($openfactura_registry)) {
+                                            echo $openfactura_registry[0]->link_logo;
+                                        } ?>"
                                     />
                                 </div>
                                 <div class="form-field__hint">
@@ -930,8 +1010,8 @@ function sub_menu_option_openfactura()
                                         id="rut" 
                                         type="tex t" 
                                         class="form-field__input" 
-                                        value="<?php 
-                                            if (!empty($openfactura_registry)) {
+                                        value="<?php
+                                        if (!empty($openfactura_registry)) {
                                             echo $openfactura_registry[0]->rut;
                                         } ?>" 
                                         disabled
@@ -948,9 +1028,9 @@ function sub_menu_option_openfactura()
                                         type="text t" 
                                         class="form-field__input" 
                                         value="<?php
-                                            if (!empty($openfactura_registry)) {
-                                                echo $openfactura_registry[0]->razon_social;
-                                            } ?>"
+                                        if (!empty($openfactura_registry)) {
+                                            echo $openfactura_registry[0]->razon_social;
+                                        } ?>"
                                         disabled
                                     />
                                 </div>
@@ -965,9 +1045,9 @@ function sub_menu_option_openfactura()
                                         type="text t" 
                                         class="form-field__input" 
                                         value="<?php
-                                            if (!empty($openfactura_registry)) {
-                                                echo $openfactura_registry[0]->glosa_descriptiva;
-                                            } ?>"
+                                        if (!empty($openfactura_registry)) {
+                                            echo $openfactura_registry[0]->glosa_descriptiva;
+                                        } ?>"
                                         disabled
                                     />
                                 </div>
@@ -1043,7 +1123,6 @@ function sub_menu_option_openfactura()
         </div>
     </div>
     <?php
-
 }
 
 function get_private_order_notes($order_id)
@@ -1087,7 +1166,9 @@ function so_payment_complete($order_id)
     $order = wc_get_order($order_id);
     //debug_log($order);
     global $wpdb;
-    $openfactura_registry = $wpdb->get_results("SELECT * FROM " . $wpdb->prefix . "openfactura_registry where is_active=1");
+    $openfactura_registry = $wpdb->get_results(
+        "SELECT * FROM " . $wpdb->prefix . "openfactura_registry where is_active=1"
+    );
     create_json_openfactura($order, $openfactura_registry[0]);
     return $order;
 }
@@ -1106,7 +1187,8 @@ function so_payment_complete($order_id)
  * - Handles the response and shows it as order notes.
  * - Returns the order.
  */
-function create_json_openfactura($order, $openfactura_registry){
+function create_json_openfactura($order, $openfactura_registry)
+{
     /**
      * Defines variables to handle order.
      */
@@ -1143,8 +1225,8 @@ function create_json_openfactura($order, $openfactura_registry){
          */
         $is_exe = $item->get_total_tax() == 0;
 
-        /** 
-         * Sanitize item name and description. Assign a default item name should it be empty. 
+        /**
+         * Sanitize item name and description. Assign a default item name should it be empty.
          */
         if (empty($name_product)) {
             $name_product = "item";
@@ -1176,7 +1258,7 @@ function create_json_openfactura($order, $openfactura_registry){
              * The total value will be lower than the subtotal when a coupon is applied.
              */
             $MontoItem = $item->get_subtotal();
-            $PrcItem = $MontoItem / $item->get_quantity();
+            $PrcItem = round($MontoItem / $item->get_quantity(), 6);
             $descuento = $MontoItem - $item->get_total();
 
             /**
@@ -1185,12 +1267,12 @@ function create_json_openfactura($order, $openfactura_registry){
             $items = [
                 "NroLinDet" => $i,
                 'NmbItem' => substr($name_product, 0, 80),
-                'QtyItem' => $item->get_quantity(),
-                'PrcItem' => round($PrcItem, 0),
-                'MontoItem' => round($MontoItem - $descuento, 0),
+                'QtyItem' => round($item->get_quantity(), 6),
+                'PrcItem' => $PrcItem,
+                'MontoItem' => round($MontoItem - $descuento),
                 'IndExe' => 1
             ];
-            
+
             if ($openfactura_registry->is_description == '1' && !empty($description_product)) {
                 $items['DscItem'] = substr($description_product, 0, 990);
             }
@@ -1199,7 +1281,7 @@ function create_json_openfactura($order, $openfactura_registry){
              * Add discount to item map.
              */
             if ($descuento > 0) {
-                $items['DescuentoMonto'] = round($descuento, 0);
+                $items['DescuentoMonto'] = round($descuento, 6);
             }
 
             /**
@@ -1207,8 +1289,8 @@ function create_json_openfactura($order, $openfactura_registry){
              * If the item's net amount is negative, it's a global discount.
              * The value of the discount also has to be added to the tax free net total.
              */
-            $mnt_exe += round($MontoItem - $descuento, 0);
-        
+            $mnt_exe += round($MontoItem - $descuento, 6);
+
         /**
         * If the item has tax:
         */
@@ -1216,9 +1298,12 @@ function create_json_openfactura($order, $openfactura_registry){
             /**
              * Calculate item's individual value based on total and quantity; item's subtotal and discount.
              */
-            $MontoItem = $item->get_subtotal() + $item->get_subtotal_tax();
+            $sub_tax = array_sum($item->get_taxes()['subtotal']);
+            $tot_tax = array_sum($item->get_taxes()['total']);
+            $MontoItem = $item->get_subtotal() + $sub_tax;
             $PrcItem = $MontoItem / $item->get_quantity();
-            $descuento = $MontoItem - ($item->get_total() + $item->get_total_tax());
+            $descuento = $MontoItem - ($item->get_total() + $tot_tax);
+            wc_get_logger()->debug("ITEM: {$MontoItem} {$item->get_subtotal()} {$sub_tax}");
 
             /**
              * Create item map for issue request. Add description to items map if item has one.
@@ -1227,10 +1312,10 @@ function create_json_openfactura($order, $openfactura_registry){
                 "NroLinDet" => $i,
                 'NmbItem' => substr($name_product, 0, 80),
                 'QtyItem' => $item->get_quantity(),
-                'PrcItem' => round($PrcItem, 0),
-                'MontoItem' => round($MontoItem - $descuento, 0)
+                'PrcItem' => round($PrcItem, 6),
+                'MontoItem' => round($MontoItem - $descuento)
             ];
-            
+
             if ($openfactura_registry->is_description == '1' && !empty($description_product)) {
                 $items['DscItem'] = substr($description_product, 0, 990);
             }
@@ -1239,15 +1324,15 @@ function create_json_openfactura($order, $openfactura_registry){
              * Add discount amount to item map
              */
             if ($descuento > 0) {
-                $items['DescuentoMonto'] = round($descuento, 0);
+                $items['DescuentoMonto'] = round($descuento, 2);
             }
-            
+
             /**
              * Add discounted item value to net amount counter.
              * If the item's net amount is negative, it's a global discount.
              * The value of the discount also has to be added to the net total.
              */
-            $mnt_neto += round($MontoItem - $descuento, 0);
+            $mnt_neto += round($MontoItem - $descuento, 6);
         }
 
         /**
@@ -1259,7 +1344,7 @@ function create_json_openfactura($order, $openfactura_registry){
             }
             $note .= '<br/> *';
             $note .= ' ' . 1 . ' ' . substr($name_product, 0, 80);
-        
+
         /**
          * If the item amount is less that zero, create a discount map. Increase idsto counter.
          */
@@ -1268,16 +1353,17 @@ function create_json_openfactura($order, $openfactura_registry){
             /**
              * In Woocommerce, coupon discounts are divided between all items in the order.
              * If there's a global discount added as an order item,
-             * the discount will include an additional discount from the coupon. 
+             * the discount will include an additional discount from the coupon.
              * This gets the global discount plus the coupon discount. Then adds its taxes.
              */
-            $mnt_descuento = $item->get_total() + ($is_exe ? 0 : $item->get_total_tax());
+            $tot_tax = $is_exe ? 0 : array_sum($item->get_taxes()['total']);
+            $mnt_descuento = $item->get_total() + $tot_tax;
 
             $dcto = [
                 "NroLinDR" => $idsto,
                 "TpoMov" => "D",
                 "TpoValor" => "$",
-                "ValorDR" => round($mnt_descuento * -1)
+                "ValorDR" => round($mnt_descuento * -1, 6)
             ];
 
             /**
@@ -1307,9 +1393,9 @@ function create_json_openfactura($order, $openfactura_registry){
         /**
          * Get fee's data.
          */
-        $fee_total_tax = round($item_fee->get_total_tax());
+        $fee_total_tax = round(array_sum($item_fee->get_taxes()['total']), 6);
         $fee_name = $item_fee->get_name();
-        $fee_total = round($item_fee->get_total());
+        $fee_total = round($item_fee->get_total(), 6);
         $fee_net_mnt = $fee_total + $fee_total_tax;
 
         /**
@@ -1334,12 +1420,12 @@ function create_json_openfactura($order, $openfactura_registry){
             $items = [
                 "NroLinDet" => $i,
                 'NmbItem' => substr($fee_name, 0, 80),
-                'QtyItem' => 1, 
+                'QtyItem' => 1,
                 'PrcItem' => $fee_total,
-                'MontoItem' => $fee_total,
+                'MontoItem' => round($fee_total),
                 'IndExe' => 1
             ];
-        
+
         /**
          * If the item has a tax, handle it as a taxable item.
          */
@@ -1367,7 +1453,7 @@ function create_json_openfactura($order, $openfactura_registry){
                 'NmbItem' => substr($fee_name, 0, 80),
                 'QtyItem' => 1,
                 'PrcItem' => $fee_net_mnt,
-                'MontoItem' => $fee_net_mnt
+                'MontoItem' => round($fee_net_mnt)
             ];
         }
         /**
@@ -1379,7 +1465,7 @@ function create_json_openfactura($order, $openfactura_registry){
             }
             $note .= '<br/> *';
             $note .= ' ' . 1 . ' ' . substr($fee_name, 0, 80);
-        
+
         /**
          * If the fee amount is less than zero, create a discount map. Increase idcsto counter.
          */
@@ -1412,7 +1498,7 @@ function create_json_openfactura($order, $openfactura_registry){
         /**
          * Get shipping amount and price. Assign item price as 1 should the shipping be free.
          */
-        $monto_item = round($shipping_item->get_total() + $shipping_item->get_total_tax());
+        $monto_item = round($shipping_item->get_total() + array_sum($shipping_item->get_taxes()['total']), 6);
         $prc_item = $monto_item == 0 ? 1 : $monto_item;
 
         /**
@@ -1440,7 +1526,7 @@ function create_json_openfactura($order, $openfactura_registry){
                 'NmbItem' => substr($shipping_item->get_name(), 0, 80),
                 'QtyItem' => 1,
                 'PrcItem' => $prc_item,
-                'MontoItem' => $monto_item,
+                'MontoItem' => round($monto_item),
                 'IndExe' => 1
             ];
         /**
@@ -1470,7 +1556,7 @@ function create_json_openfactura($order, $openfactura_registry){
                 'NmbItem' => substr($shipping_item->get_name(), 0, 80),
                 'QtyItem' => 1,
                 'PrcItem' => $prc_item,
-                'MontoItem' => $monto_item
+                'MontoItem' => round($monto_item)
             ];
         }
 
@@ -1483,7 +1569,7 @@ function create_json_openfactura($order, $openfactura_registry){
             }
             $note .= '<br/> *';
             $note .= ' ' . 1 . ' ' . substr($shipping_item->get_name(), 0, 80);
-        
+
         /**
          * If the shipping amount is less than zero, create a discount map. Increase idcsto counter.
          */
@@ -1538,7 +1624,8 @@ function create_json_openfactura($order, $openfactura_registry){
     }
 
     if (!empty($order->get_billing_last_name())) {
-        $customerData["fullName"] .= " " . substr($order->get_billing_last_name(), 0, 100 - strlen($customerData["fullName"]));
+        $customerData["fullName"] .= " " .
+        substr($order->get_billing_last_name(), 0, 100 - strlen($customerData["fullName"]));
     }
 
     if (!empty($order->get_billing_email())) {
@@ -1553,10 +1640,11 @@ function create_json_openfactura($order, $openfactura_registry){
     $customize_page["customizePage"] = [
         'externalReference' => [
             "hyperlinkText" => "Orden de Compra #" . $order->get_id(),
-            "hyperlinkURL" => wc_get_checkout_url() . "order-received/" . $order->get_order_number() . "/key=" . $order->get_order_key()
+            "hyperlinkURL" => wc_get_checkout_url() . "order-received/" .
+            $order->get_order_number() . "/key=" . $order->get_order_key()
         ]
     ];
-    
+
     if ($openfactura_registry->show_logo && !empty($openfactura_registry->link_logo)) {
         $customize_page["customizePage"]["urlLogo"] = $openfactura_registry->link_logo;
     }
@@ -1598,15 +1686,15 @@ function create_json_openfactura($order, $openfactura_registry){
         /**
          * Calculate IVA from the net total and a fixed value, Chile's current IVA.
          */
-        $iva = round($mnt_neto * 0.19 / 1.19); 
+        $iva = round($mnt_neto * 0.19 / 1.19);
         /**
          * Handle issue request's headers. This defines the net amount, the
-         * exempt amount and the tax of the order. 
+         * exempt amount and the tax of the order.
          * IndMntNeto = 1 is a constant that the issue backend expects to receive.
          */
         $id_doc = ["FchEmis" => $date ];
         $totales = [
-            "MntNeto" => round($mnt_neto / (1 + (19 /100))),
+            "MntNeto" => round($mnt_neto / (1 + (19 / 100))),
             "TasaIVA" => "19.00",
             "IVA" => $iva,
             'MntExe' => round($mnt_exe),
@@ -1618,7 +1706,7 @@ function create_json_openfactura($order, $openfactura_registry){
          */
         $document_type = 'Boleta Electrónica Afecta';
         $document_code = "39";
-    
+
     /**
      * If the afecta flag isn't active, handle order as tax free.
      */
@@ -1704,19 +1792,13 @@ function create_json_openfactura($order, $openfactura_registry){
         $document_send = array_merge($document_send, ["notaInf" => $note]);
     }
 
-    error_log(print_r($order, true));
-    error_log(print_r($document_send, true));
+    //error_log(print_r($order, true));
+    $date = date("Y-m-d H:i:s");
 
     /**
      * Encode document send object as a json object
      */
     $document_send = json_encode($document_send, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-
-    /*if (is_array($document_send) || is_object($document_send)) {
-        error_log(print_r($document_send, true));
-    } else {
-        error_log($document_send);
-    }*/
 
     /**
      * Define API url based on current environment
@@ -1729,6 +1811,13 @@ function create_json_openfactura($order, $openfactura_registry){
         //prod environment
         $url_generate = 'https://api.haulmer.com/v2/dte/document';
     }
+
+    /*
+     * Get idempotency key
+     */
+    $date = date("Y/m/d_H:i:s");
+    $orderKey = $order->get_order_key();
+    $idemKey = "WOOCOMMERCE_{$emisor['rut']}_{$date}_{$orderKey}}";
 
     /**
      * Prepare POST request to API
@@ -1746,7 +1835,7 @@ function create_json_openfactura($order, $openfactura_registry){
         CURLOPT_HTTPHEADER => array(
             "Content-type: application/json",
             "apikey:" . $openfactura_registry->apikey,
-            "Idempotency-Key:" . "WOOCOMMERCE" . "_" . $emisor['rut'] . "_" . date("Y/m/d_H:i:s") . "_" . $order->get_order_key(),
+            "Idempotency-Key:" . $idemKey,
         ),
     ));
 
@@ -1760,11 +1849,11 @@ function create_json_openfactura($order, $openfactura_registry){
     /**
      * Log response.
      */
-    /*if (is_array($response) || is_object($response)) {
-        error_log(print_r($response, true));
-    } else {
-        error_log($response);
-    }*/
+    logOF("RESPONSE ORDER ID {$order->get_id()}:\n" . $response, 'debug');
+
+    if (!empty($err)) {
+        logOf("ERROR ORDER ID {$order->get_id()}: " . $err, 'error');
+    }
 
     /**
      * Handle response in woocommerce's order details interface in wordpress' admin panel
@@ -1784,9 +1873,12 @@ function create_json_openfactura($order, $openfactura_registry){
         } else {
             add_post_meta($order->get_id(), '_invoice_serial', 'No Generado');
             add_post_meta($order->get_id(), '_document_code', 'No Generado');
-            $order->add_order_note('Folio: No generado');
+            $order->add_order_note('Folio: Determinado cuando cliente genere documento.');
         }
     } else {
+        $responseString = json_encode($response);
+        logOf("Documento no generado. Registrando Order Id {$order->get_id()}:\n{$document_send}", 'error');
+        logOf("Respuesta obtenida para Order Id {$order->get_id()}:\n{$responseString}", 'error');
         $info = "No se pudo generar tu documento tributario. \n";
         $error = "Error: " . $response['error']['message'] . "\n";
         $code = "Código: " . $response['error']['code'] . "\n";
@@ -1818,12 +1910,12 @@ function misha_editable_order_meta_general($order)
     $serial_number = get_post_meta($order->get_id(), '_invoice_serial', true);
     $document_code = get_post_meta($order->get_id(), '_document_code', true);
     if (!empty($document_type)) {
-    ?> <p>Tipo de documento: <?php echo $document_type; ?> </p>
-    <?php
+        ?> <p>Tipo de documento: <?php echo $document_type; ?> </p>
+        <?php
     }
     if (!empty($serial_number)) {
-    ?> <p>Folio: <?php echo $serial_number; ?> </p>
-<?php
+        ?> <p>Folio: <?php echo $serial_number; ?> </p>
+        <?php
     }
 }
 
@@ -1840,7 +1932,10 @@ function my_completed_order_email_instructions($order, $sent_to_admin, $plain_te
         return;
     }
     global $wpdb;
-    $openfactura_registry_active = $wpdb->get_results("SELECT * FROM  " . $wpdb->prefix . "openfactura_registry where is_active=1");
+    $openfactura_registry_active = $wpdb->get_results(
+        "SELECT * FROM  " . $wpdb->prefix . "openfactura_registry where is_active=1"
+    );
+
     if ($openfactura_registry_active[0]->is_email_link_selfservice == '1') {
         $order_notes = get_private_order_notes($order->get_id());
         //verificar que enlace de autoservicio no este creado previamente
@@ -1857,45 +1952,18 @@ function my_completed_order_email_instructions($order, $sent_to_admin, $plain_te
 }
 
 /**
- * Debug log
+ * Log message. Severity depends on availiable severity levels from Woocommerce.
+ * Possible values for severity are:
+ * 0 emergency: system is unusable
+ * 1 alert: action must be taken immediately
+ * 2 critical: critical conditions
+ * 3 error: error conditions
+ * 4 warning: warning conditions
+ * 5 notice: normal but significant condition
+ * 6 info: informational messages
+ * 7 debug: debug-level messages
  */
-function debug_log($order)
+function logOF(string $message, string $severity = 'debug'): void
 {
-    error_log(print_r("************ customer **************", true));
-    if (!empty($order->get_billing_first_name()) && !empty($order->get_billing_last_name()) && !empty($order->get_billing_email())) {
-        error_log(print_r($order->get_billing_first_name(), true));
-        error_log(print_r($order->get_billing_last_name(), true));
-        error_log(print_r($order->get_billing_email(), true));
-    } elseif (!empty($order->get_billing_email()) && !empty($order->get_billing_email())) {
-        error_log(print_r($order->get_billing_first_name(), true));
-        error_log(print_r($order->get_billing_email(), true));
-    } else {
-        error_log(print_r($order->get_billing_first_name(), true));
-    }
-
-    error_log(print_r("************ order **************", true));
-    $orderi = $order->get_data();
-    error_log(print_r($orderi, true));
-
-    error_log(print_r("************ coupons **************", true));
-    foreach ($order->get_coupon_codes() as $coupon_code) {
-        $c = new WC_Coupon($coupon_code);
-        error_log(print_r($c, true));
-    }
-
-    error_log(print_r("************ item **************", true));
-    foreach ($order->get_items() as $item_id => $item) {
-        $item = $item->get_data();
-        error_log(print_r($item, true));
-    }
-    error_log(print_r("************ fee **************", true));
-    foreach ($order->get_items('fee') as $item_id => $item_fee) {
-        $item_fee = $item_fee->get_data();
-        error_log(print_r($item_fee, true));
-    }
-    error_log(print_r("************ shipping **************", true));
-    foreach ($order->get_items('shipping') as $item_id => $shipping_item) {
-        $shipping_item = $shipping_item->get_data();
-        error_log(print_r($shipping_item, true));
-    }
+    wc_get_logger()->{$severity}($message, ['source' => 'OPENFACTURA']);
 }
