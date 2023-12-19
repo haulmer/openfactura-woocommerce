@@ -4,19 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## ## V1.0.26_beta.2 2023-08-03
-## Changed
-- Refactors in admin view.
-- Behavior of Api key form now reflects demo use.
+## ## V1.0.27 2023-11-22
+## Fix
+- Fixes PrcItem and another detail values being incorrectly rounded.
+- Fixes plugin not leaving logs when issue fails.
 
-## Unreleased
-## V1.0.26_beta.1 2023-07-28
+## V1.0.26 2023-08-11
 ### Fix
 - Includes item's tax in the item net amount toal to avoid rouding precision errors.
 - Changes net ammount indicator to include IVA on items' net amount.
 - Fixes global discount's net not being added to net totals.
 - Fixes discounts wrongly marked as tax free.
 - Disallows tax free discounts when there's no tax free items.
+- Refactors in admin view.
+- Behavior of Api key form now reflects demo use.
 
 ## V1.0.25 2022-01-26
 ### Fix

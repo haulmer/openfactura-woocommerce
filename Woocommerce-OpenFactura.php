@@ -1,9 +1,10 @@
 <?php
+
 /**
  * Plugin Name: Woocommerce OpenFactura
  * Plugin URI: https://www.haulmer.com/
  * Description: Creación de boletas y facturas electrónicas
- * Version: 1.0.26
+ * Version: 1.0.27
  * Author: Haulmer
  * Author URI: https://www.haulmer.com/
  * Developer: Haulmer
@@ -18,7 +19,7 @@
  * Copyright: 2020 Haulmer
  */
 
- if ( ! defined( 'ABSPATH' ) ) {
+if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
 
@@ -26,4 +27,4 @@ include('OpenFactura.php');
 /**
  * Create table openfactura_registry
  */
-register_activation_hook( __FILE__, 'openfactura_registry' );
+register_activation_hook(__FILE__, 'openfactura_registry');
